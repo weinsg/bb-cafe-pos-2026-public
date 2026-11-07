@@ -1,0 +1,200 @@
+/* Staff ordering is a tablet workstation. Public displays keep their own layout. */
+.order-workspace .main-content {
+  max-width: none;
+  padding: 12px 16px;
+}
+.order-workspace .workspace-footer { display: none; }
+.order-workspace .topbar { height: 56px; flex-shrink: 0; padding-inline: 16px; }
+.pos-order { min-width: 0; }
+.pos-order[hidden] { display: none; }
+.order-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.order-toolbar h1 { font-size: 24px; margin: 0; letter-spacing: -.7px; }
+.order-toolbar p { margin: 0; color: var(--muted); font-size: 13px; }
+.pos-order .order-layout {
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 16px;
+}
+.pos-order .menu-section { min-width: 0; }
+.pos-order .section-heading { margin-bottom: 10px; }
+.pos-order .section-heading h2 { font-size: 16px; }
+.pos-order .category-tabs { gap: 6px; margin-bottom: 12px; }
+.pos-order .category-tabs button { min-height: 44px; font-size: 13px; padding: 8px 12px; }
+.pos-order .menu-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.pos-order .menu-card {
+  min-height: 84px;
+  padding: 10px 12px;
+  display: grid;
+  align-content: space-between;
+  gap: 6px;
+}
+.pos-order .drink-art { width: 36px; height: 36px; margin: 0; border-radius: 8px; }
+.pos-order .drink-art > svg { width: 26px; height: 26px; }
+.pos-order .drink-orbit { display: none; }
+.pos-order .menu-card-name { font-size: 17px; line-height: 1.2; margin: 0; }
+.pos-order .menu-card-bottom > strong { font-size: 15px; }
+.pos-order .add-circle { width: 28px; height: 28px; }
+.pos-order .sold-out .add-circle { width: auto; min-width: 28px; font-size: 11px; }
+.pos-order .ticket-panel { top: 12px; }
+.pos-order .ticket-header { padding: 12px 14px; min-height: 52px; }
+.pos-order .ticket-header h2 { font-size: 18px; }
+.pos-order .item-count { font-size: 12px; }
+.pos-order .ticket-body { padding: 12px 14px; }
+.pos-order .ticket-body > label { font-size: 13px; }
+.pos-order .ticket-body input { min-height: 44px; font-size: 16px; padding: 10px 12px; }
+.pos-order .cart-items { margin-top: 10px; }
+.pos-order .cart-items .empty { padding: 20px 4px; }
+.pos-order .cart-items .empty-icon { display: none; }
+.pos-order .cart-items .empty h3 { font-size: 15px; }
+.pos-order .cart-items .empty p { font-size: 13px; }
+/* Cart: one 56px row per drink, like a receipt; tap a row to edit it. */
+.pos-order .cart-items { display: flex; flex-direction: column; gap: 4px; }
+.cart-line {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.cart-line strong { display: block; font-size: 16px; }
+.cart-line small { display: block; margin-top: 1px; font-size: 14px; color: #4e5a49; }
+.cart-line-qty { font-size: 16px; font-weight: 800; }
+.cart-line-price { font-weight: 600; }
+.cart-line.editing { background: #eef4ea; border-color: #9cc3a3; box-shadow: inset 4px 0 0 var(--green); }
+/* Options for the drink being edited, in the space under the menu. */
+.option-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 2px solid #9cc3a3;
+  border-radius: 12px;
+  background: #fff;
+}
+.option-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.option-panel-heading h2 { margin: 0; font-size: 19px; }
+.option-panel-heading h2 small { margin-left: 8px; font-size: 13px; font-weight: 500; color: var(--muted); }
+.remove-line {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #e3c9c9;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--red);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.option-row { display: grid; grid-template-columns: 110px minmax(0, 1fr); align-items: center; gap: 10px; }
+.option-row > span { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.option-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.option-buttons button {
+  display: grid;
+  place-content: center;
+  min-width: 104px;
+  min-height: 56px;
+  padding: 4px 16px;
+  border: 2px solid #cfd5c8;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.15;
+  cursor: pointer;
+}
+.option-buttons button small { font-size: 12px; font-weight: 600; opacity: .8; }
+.option-buttons button.selected { border-color: var(--green); background: var(--green); color: #fff; }
+.option-buttons button:disabled { border-style: dashed; background: #f1f0ea; color: #9aa096; cursor: not-allowed; }
+.option-buttons button:disabled small { color: var(--red); opacity: 1; }
+.option-panel .stepper { display: flex; align-items: center; gap: 8px; justify-self: start; border: 0; overflow: visible; }
+.option-panel .stepper button {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 2px solid #cfd5c8;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
+.option-panel .stepper output { min-width: 40px; text-align: center; font-size: 20px; font-weight: 800; }
+.pos-order .ticket-total { padding: 12px 14px; }
+.pos-order .ticket-total > div { font-size: 14px; align-items: baseline; }
+.pos-order .ticket-total > div strong { font-size: 26px; }
+.pos-order .ticket-total > p { font-size: 12px; margin: 6px 0 10px; }
+.pos-order .ticket-total .primary { min-height: 56px; font-size: 18px; }
+
+/* iPad-sized staff navigation retains text instead of ambiguous icon-only links. */
+@media (min-width: 721px) and (max-width: 1366px) {
+  .sidebar { width: 96px; padding: 12px 6px; align-items: center; }
+  .sidebar .brand { margin-bottom: 14px; }
+  .sidebar .brand > span:last-child, .sidebar-label, .charity-note { display: none; }
+  .sidebar .brand-mark { width: 40px; height: 42px; }
+  .sidebar nav { width: 100%; gap: 4px; }
+  .sidebar .nav-item {
+    min-height: 58px;
+    padding: 7px 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    font-size: 11px;
+    text-align: center;
+  }
+  .sidebar .nav-item > span { display: block; }
+  .sidebar .nav-item .nav-count { display: none; }
+  .sidebar .nav-item.selected:before { display: none; }
+  .sidebar-bottom { width: 100%; padding-top: 10px; }
+  .sidebar-bottom .board-link { min-height: 52px; font-size: 11px; flex-direction: column; gap: 4px; padding: 6px 0; }
+  .sidebar-bottom .board-link span { display: none; }
+  .workspace { margin-left: 96px; }
+}
+
+/* Keep checkout in reach; only long menu/cart lists scroll on a tablet. */
+@media (min-width: 721px) and (min-height: 540px) {
+  .order-workspace { height: 100vh; height: 100dvh; min-height: 0; }
+  .order-workspace .workspace { min-height: 0; }
+  .order-workspace .main-content { min-height: 0; display: flex; flex-direction: column; }
+  .pos-order { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .order-toolbar { flex-shrink: 0; }
+  .pos-order .order-layout { flex: 1; min-height: 0; align-items: stretch; }
+  .pos-order .menu-section { overflow-y: auto; overscroll-behavior-y: contain; padding-right: 3px; }
+  .pos-order .ticket-panel { position: static; display: flex; flex-direction: column; min-height: 0; }
+  .pos-order .ticket-header { flex-shrink: 0; }
+  .pos-order .ticket-panel form { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .pos-order .ticket-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .pos-order .ticket-body > label, .pos-order .ticket-body > .message { flex-shrink: 0; }
+  .pos-order .cart-items { min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
+  .pos-order .ticket-total { flex-shrink: 0; }
+}
+@media (min-width: 721px) and (max-width: 1050px) {
+  .pos-order .order-layout { grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
+  .pos-order .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .order-toolbar p { display: none; }
+  .option-row { grid-template-columns: 1fr; gap: 6px; }
+  .option-buttons button { min-width: 92px; }
+}
+@media (max-width: 720px) {
+  .order-workspace .main-content { padding: 14px 12px; }
+  .order-toolbar p { display: none; }
+  .pos-order .order-layout { grid-template-columns: 1fr; gap: 16px; }
+  .pos-order .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pos-order .category-tabs { gap: 5px; }
+  .pos-order .category-tabs button { font-size: 12px; padding-inline: 9px; }
+  .pos-order .menu-card { padding: 10px; }
+  .pos-order .menu-card-name { font-size: 14px; }
+}

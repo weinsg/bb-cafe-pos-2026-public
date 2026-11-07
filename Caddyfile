@@ -1,0 +1,17 @@
+# HTTPS for the live link. Caddy gets and renews the certificate for {$DOMAIN} by itself.
+{$DOMAIN} {
+	encode zstd gzip
+	# Security headers on every response. The camera stays allowed for this site only (pickup scan).
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=()"
+		-Server
+	}
+	reverse_proxy app:8000 {
+		# Live updates (/api/events) must reach browsers immediately, not in buffered chunks.
+		flush_interval -1
+	}
+}

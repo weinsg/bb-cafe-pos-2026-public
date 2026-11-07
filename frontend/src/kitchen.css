@@ -1,0 +1,322 @@
+/* Kitchen POS presentation for staff screens. Loaded last; the guest page is not affected. */
+
+/* Shell: compact navigation and one top bar that carries the screen name. */
+@media (min-width: 1367px) {
+  .sidebar {
+    width: 176px;
+    padding: 14px 10px;
+    background-image: none;
+  }
+  .sidebar .brand {
+    margin-bottom: 18px;
+  }
+  .sidebar .brand small {
+    display: none;
+  }
+  .sidebar .brand strong {
+    font-size: 18px;
+  }
+  .sidebar .brand-mark {
+    width: 36px;
+    height: 40px;
+  }
+  .nav-item {
+    min-height: 48px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .nav-item.selected:before {
+    display: none;
+  }
+  .workspace {
+    margin-left: 176px;
+  }
+}
+.sidebar-bottom {
+  padding-top: 12px;
+}
+.topbar {
+  height: 56px;
+  padding: 0 16px;
+  background: #fffef9;
+}
+.topbar-title {
+  font-size: 22px;
+  letter-spacing: -0.5px;
+  margin: 0;
+  white-space: nowrap;
+}
+.main-content {
+  max-width: none;
+  padding: 12px 16px 20px;
+}
+.page-title {
+  margin: 0 0 12px;
+  min-height: 44px;
+}
+.page-title .subtitle {
+  font-size: 14px;
+  margin: 0;
+}
+.message {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.empty {
+  padding: 24px 12px;
+}
+.empty h3 {
+  font-size: 16px;
+  margin: 0;
+}
+.empty p {
+  font-size: 13px;
+  margin-top: 6px;
+}
+.category-tabs {
+  margin-bottom: 12px;
+}
+.category-tabs button {
+  min-height: 44px;
+  font-size: 14px;
+}
+
+/* Queue: top-aligned kitchen tickets, height follows content. */
+.queue-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+.queue-card {
+  padding: 0;
+  border: 1px solid #cfd5c6;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.queue-card header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 2px 6px;
+  margin: 0;
+  padding: 5px 6px 5px 12px;
+  background: #e6e9df;
+}
+.queue-card-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+/* Names wrap rather than being cut off: staff call guests by name. */
+.queue-card-title h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.queue-card-meta time {
+  white-space: nowrap;
+}
+/* Finished tickets have no QR button: keep the meta row under the number, not in the QR column
+. */
+.queue-card-meta {
+  grid-column: 1;
+}
+.queue-card header.no-qr .queue-card-meta {
+  grid-column: 1 / -1;
+}
+/* Top-aligned so a late ticket's "Since 1:20 pm" can run below it. */
+.queue-card .qr-button {
+  grid-row: span 2;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  /* No button padding: 17px sides left 10px for the 22px icon, so it sat off-centre. */
+  padding: 0;
+  border: 1px solid #00000020;
+  border-radius: 8px;
+  background: #ffffffb8;
+  color: inherit;
+  cursor: pointer;
+}
+.queue-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.queue-card.status-making header {
+  background: #f3e2b8;
+}
+.queue-card.status-ready header {
+  background: #cfe5c9;
+}
+.queue-card.status-collected header {
+  background: #e4e7e1;
+}
+.queue-card .order-number {
+  font-size: 22px;
+  letter-spacing: -0.5px;
+}
+.queue-card h2 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.2;
+}
+.queue-card .pill {
+  font-size: 12px;
+}
+.queue-card time {
+  font-size: 12px;
+  color: #6c7466;
+}
+.queue-card ul {
+  margin: 6px 12px 4px;
+}
+.queue-card li {
+  padding: 4px 0;
+  font-size: 16px;
+}
+.queue-card li:first-child {
+  border-top: 0;
+}
+.queue-card li span {
+  padding-left: 22px;
+  margin-top: 2px;
+  font-size: 14px;
+  color: #4e5a49;
+}
+.queue-card .primary,
+.queue-card .secondary {
+  width: calc(100% - 24px);
+  margin: 2px 12px 10px;
+  min-height: 48px;
+  font-size: 16px;
+}
+.queue-card .footnote {
+  padding: 0 12px 10px;
+}
+
+/* New order: plain POS item buttons. */
+.pos-order .menu-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.pos-order .menu-card {
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 10px 12px;
+  text-align: left;
+}
+.pos-order .menu-card-name {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.pos-order .menu-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.pos-order .menu-card-bottom > strong {
+  font-size: 15px;
+}
+.sold-out-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+/* Order saved: number, name and a large QR for the customer. */
+.ticket-confirm h3 {
+  font-size: 64px;
+  margin: 0;
+}
+.ticket-confirm .ticket-confirm-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: inherit;
+  margin: 4px 0 0;
+}
+.ticket-confirm .ticket-confirm-total {
+  margin: 6px 0 0;
+  font-size: 16px;
+}
+.ticket-confirm .ticket-confirm-total strong {
+  font-size: 26px;
+  margin-left: 6px;
+}
+.qr-wrap {
+  width: 272px;
+  margin: 14px auto 8px;
+}
+
+/* Management screens: tighter panels and tables. */
+.panel {
+  margin-bottom: 12px;
+}
+.panel-heading {
+  padding: 12px 16px;
+}
+.panel-heading h2 {
+  font-size: 16px;
+}
+td,
+th {
+  padding: 10px 14px;
+}
+.ingredients-panel,
+.reset-panel,
+.board-settings-panel {
+  padding: 14px 16px;
+}
+.report-stats {
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.stat-card {
+  padding: 14px 16px;
+}
+
+/* Sign in: a single plain form. */
+.login-page {
+  grid-template-columns: 1fr;
+}
+.login-form-wrap {
+  padding: 24px 16px;
+}
+.login-form h1 {
+  font-size: 24px;
+  letter-spacing: -0.5px;
+  margin: 18px 0 16px;
+}
+.login-form form {
+  gap: 14px;
+}
+
+@media (max-width: 720px) {
+  .topbar-title {
+    font-size: 18px;
+  }
+  .main-content {
+    padding: 12px;
+  }
+}
+.add-on-price span {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.add-on-price input {
+  font-size: 16px;
+}
+.option-buttons button {
+  transition: none;
+}

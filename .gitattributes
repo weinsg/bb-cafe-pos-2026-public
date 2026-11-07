@@ -1,0 +1,6 @@
+# Design mockups, renders and demo media are documentation, not source code.
+# This keeps them out of GitHub's language statistics.
+deliverables/** linguist-documentation
+
+# Shell scripts run on the Linux server.
+*.sh text eol=lf

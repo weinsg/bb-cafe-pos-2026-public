@@ -1,0 +1,1056 @@
+/* Staff POS layer: narrow rail with status at the bottom, no top bar,
+   one toolbar row per screen and kitchen-readable type. Loaded last; guest page and board unaffected.
+   References: POSitive till rail, ForkStack history/day close, Toast quick edit (ref/POS-Research). */
+
+.app-shell {
+  --staff-muted: #56604f;
+}
+
+/* Rail: about 96px at every tablet and desktop width.
+   Sync status sits under the logo, above New order. */
+@media (min-width: 721px) {
+  .app-shell .sidebar {
+    width: 96px;
+    padding: 8px 6px;
+    align-items: stretch;
+    background-image: none;
+    overflow-y: auto;
+  }
+  .app-shell .workspace {
+    margin-left: 96px;
+  }
+  .app-shell .rail-logo {
+    display: grid;
+    place-items: center;
+    height: 52px;
+    margin-bottom: 6px;
+    color: #f3f1e4;
+  }
+  .app-shell .sidebar nav {
+    width: 100%;
+    gap: 4px;
+  }
+  .app-shell .nav-item {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 64px;
+    padding: 8px 4px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.15;
+    text-align: center;
+    color: #d5dfcf;
+  }
+  .app-shell .nav-item > span {
+    display: block;
+  }
+  .app-shell .nav-item.selected {
+    color: #173e30;
+  }
+  .app-shell .nav-item.selected:before {
+    display: none;
+  }
+  .app-shell .nav-item .nav-count {
+    display: block;
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    margin: 0;
+    min-width: 24px;
+    padding: 0 6px;
+    font-size: 14px;
+    line-height: 22px;
+    text-align: center;
+    border-radius: 11px;
+    background: #d6ba80;
+    color: #173e30;
+  }
+  .app-shell .sidebar-bottom {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .app-shell .sidebar-bottom .board-link,
+  .app-shell .rail-signout {
+    min-height: 56px;
+    padding: 6px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #d5dfcf;
+    border-radius: 8px;
+  }
+  .app-shell .sidebar-bottom .board-link span {
+    display: block;
+    margin: 0;
+  }
+  .app-shell .sync-status {
+    margin-bottom: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 4px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+  .app-shell .status-dot {
+    width: 10px;
+    height: 10px;
+  }
+  .app-shell .staff-chip {
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 0 0;
+    border-top: 1px solid #ffffff26;
+    font-size: 14px;
+    text-align: center;
+    color: #f3f1e4;
+  }
+  .app-shell .staff-chip small {
+    font-size: 14px;
+    color: #c2d0bc;
+  }
+  .app-shell .staff-chip .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+}
+
+/* Phones: the rail becomes a top strip; status and Sign out stay visible. */
+@media (max-width: 720px) {
+  .app-shell .rail-logo {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    color: #f3f1e4;
+  }
+  .app-shell .sidebar-bottom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .app-shell .sidebar-bottom .board-link span,
+  .app-shell .staff-chip > span:last-child {
+    display: none;
+  }
+  .app-shell .sidebar-bottom .board-link {
+    min-width: 44px;
+    justify-content: center;
+  }
+  .app-shell .staff-chip .avatar {
+    display: grid;
+  }
+  .app-shell .sync-status {
+    color: #3f6a4c;
+    font-size: 14px;
+  }
+  .app-shell .nav-item {
+    font-size: 14px;
+  }
+  .app-shell .rail-signout {
+    min-width: 44px;
+    padding: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #f3f1e4;
+    font-size: 14px;
+  }
+  .app-shell .rail-signout span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+}
+
+/* Content starts right at the top: no title row. */
+.app-shell .main-content,
+.order-workspace .main-content {
+  padding: 12px 16px 16px;
+}
+
+/* Kitchen-readable type on every staff screen:
+   body and table text 16px, labels 14px, key figures 24px or more. */
+.app-shell .main-content {
+  font-size: 16px;
+}
+.app-shell .muted,
+.app-shell .small,
+.app-shell small,
+.app-shell td small,
+.app-shell label small,
+.app-shell .footnote {
+  font-size: 14px;
+  color: var(--staff-muted);
+}
+.app-shell .footnote {
+  max-width: none;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+.app-shell .message {
+  font-size: 16px;
+}
+.app-shell label {
+  font-size: 14px;
+}
+.app-shell input,
+.app-shell select {
+  font-size: 16px;
+}
+.app-shell .primary,
+.app-shell .secondary,
+.app-shell .danger {
+  font-size: 16px;
+}
+.app-shell .text-button,
+.app-shell .text-link {
+  font-size: 14px;
+}
+.app-shell .pill {
+  font-size: 14px;
+  padding: 3px 8px;
+}
+.app-shell .category-tabs button {
+  font-size: 16px;
+  font-weight: 600;
+  color: #4e5a49;
+}
+.app-shell .category-tabs button.active {
+  color: #fff;
+}
+.app-shell .category-tabs button span {
+  font-size: 14px;
+}
+.app-shell table {
+  font-size: 16px;
+}
+.app-shell th {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--staff-muted);
+}
+.app-shell td {
+  padding: 8px 12px;
+}
+.app-shell td strong {
+  font-weight: 600;
+}
+.app-shell td small {
+  margin-top: 2px;
+}
+.app-shell .panel {
+  border-radius: 8px;
+}
+.app-shell .panel-heading {
+  padding: 10px 12px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.app-shell .panel-heading h2 {
+  font-size: 18px;
+}
+.app-shell .panel-heading .pill {
+  margin-left: auto;
+}
+
+/* One toolbar row for page actions: date, export, add item. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+.toolbar label {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.toolbar input[type="date"] {
+  width: auto;
+}
+.toolbar-end {
+  margin-left: auto;
+}
+.toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.toolbar-group h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--staff-muted);
+}
+
+/* Daily sales: one compact summary strip, tables beside each other. */
+.report-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 24px;
+  margin-bottom: 12px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffefa;
+}
+.report-strip dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 32px;
+  margin: 0;
+}
+.report-strip dt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--staff-muted);
+}
+.report-strip dd {
+  margin: 0;
+  font-family: Manrope, sans-serif;
+  font-size: 28px;
+  font-weight: 750;
+  line-height: 1.15;
+}
+.report-strip .strip-main dd {
+  color: var(--green);
+}
+.report-strip .strip-note {
+  margin: 0 0 0 auto;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--staff-muted);
+}
+.report-tables {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr);
+  gap: 12px;
+  align-items: start;
+}
+.report-tables .panel {
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .report-tables {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Menu: quick milk and add-on controls (Toast quick edit), dense item table. */
+.app-shell .ingredient-button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 12px;
+  gap: 2px;
+}
+.app-shell .ingredient-button > span {
+  font-size: 16px;
+  font-weight: 600;
+}
+.app-shell .ingredient-button small {
+  font-size: 14px;
+  color: #4d6a3e;
+}
+.app-shell .ingredient-button.is-out small {
+  color: #8a6a2c;
+}
+.app-shell .add-on-price {
+  min-width: 0;
+}
+.app-shell .add-on-price input {
+  width: 84px;
+}
+.app-shell .price-form {
+  font-size: 16px;
+}
+.app-shell .price-form input {
+  width: 96px;
+  font-size: 16px;
+}
+.app-shell .price-form button {
+  font-size: 16px;
+  padding: 8px 12px;
+}
+.app-shell .stock-toggle {
+  min-width: 132px;
+  min-height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3f6a2f;
+}
+.app-shell .stock-toggle.out {
+  color: #8a6a2c;
+}
+
+/* Settings: tab row is the toolbar; forms and tables stay compact. */
+.app-shell .ingredients-panel,
+.app-shell .reset-panel,
+.app-shell .board-settings-panel {
+  padding: 12px 16px;
+}
+.app-shell .reset-panel h2 {
+  font-size: 18px;
+  margin: 0 0 6px;
+}
+.app-shell .reset-panel p {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.app-shell .reset-panel label {
+  max-width: 260px;
+  margin-bottom: 10px;
+}
+.app-shell .access-batch {
+  padding: 8px 12px;
+  font-size: 16px;
+}
+.app-shell .board-layout-label {
+  font-size: 16px;
+}
+.app-shell .board-layout-choice small {
+  font-size: 14px;
+}
+.app-shell legend {
+  font-size: 16px;
+  font-weight: 700;
+}
+.app-shell .audit-table td {
+  font-size: 16px;
+}
+.app-shell .audit-action {
+  font-size: 14px;
+}
+
+/* Queue: tickets readable from arm's length. */
+.app-shell .queue-card .order-number {
+  font-size: 24px;
+}
+.app-shell .queue-card h2 {
+  font-size: 18px;
+}
+.app-shell .queue-card .pill,
+.app-shell .queue-card time {
+  font-size: 14px;
+}
+.app-shell .queue-card time {
+  color: var(--staff-muted);
+}
+.app-shell .queue-card li span {
+  font-size: 15px;
+  color: #45503f;
+}
+.app-shell .queue-card .footnote {
+  font-size: 14px;
+}
+
+/* New order: the last labels under 14px. */
+.app-shell .pos-order .item-count,
+.app-shell .pos-order .ticket-body > label,
+.app-shell .pos-order .ticket-total > p,
+.app-shell .order-toolbar p {
+  font-size: 14px;
+}
+.app-shell .pos-order .menu-card-bottom > strong {
+  font-size: 16px;
+}
+
+/* Reset day and audit trail. */
+.app-shell .reset-panel > p {
+  font-size: 16px;
+  color: var(--staff-muted);
+}
+.app-shell .audit-table td:last-child strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+/* Order saved popup: fits a 1366x768 laptop with Next order in view.
+   The dialog is portalled outside .app-shell, so these rules are not scoped to it. */
+dialog:has(.ticket-confirm) {
+  padding: 16px 20px;
+  max-height: calc(100dvh - 24px);
+}
+.ticket-confirm h3 {
+  font-size: 56px;
+  margin-bottom: 2px;
+}
+.ticket-confirm > p:not(.eyebrow) {
+  margin: 4px 0 0;
+  font-size: 16px;
+  color: #56604f;
+}
+.ticket-confirm > p.ticket-confirm-name {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #243c32;
+}
+.ticket-confirm .qr-wrap {
+  margin: 10px auto 6px;
+  padding: 10px;
+}
+.ticket-confirm .message {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.ticket-confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.ticket-confirm-actions .text-link {
+  margin: 0;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.ticket-confirm-actions .primary {
+  flex: 1;
+  min-height: 56px;
+  font-size: 18px;
+}
+.ticket-confirm-actions .secondary {
+  white-space: nowrap;
+}
+/* Order saved popup with Cancel: Next order on its own full-width row first. */
+.ticket-confirm-actions.saved-with-cancel {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.ticket-confirm-actions.saved-with-cancel .primary {
+  order: -1;
+  flex: 1 0 100%;
+}
+
+/* Pickup scan: camera beside the result; result colour + label + sound. */
+.pickup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .pickup {
+    grid-template-columns: 1fr;
+  }
+}
+.app-shell .pickup .panel {
+  margin: 0;
+  padding: 12px;
+}
+.pickup-video {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  max-height: 60vh;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1d3229;
+  display: grid;
+  place-items: center;
+}
+/* Pinned to the box: a portrait phone camera would otherwise grow the video
+   taller than the box, so the preview showed the top of the picture while qr-scanner's
+   frame and scan area sat lower, in the video's centre. */
+.pickup-video video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* The video must never be display:none: qr-scanner then shrinks it to 0x0 for good.
+   The placeholder covers it until the camera starts. */
+.pickup-video p {
+  position: absolute;
+  inset: 0;
+  align-content: center;
+  background: #1d3229;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
+  font-size: 16px;
+  color: #e6ede1;
+  text-align: center;
+}
+.pickup-actions {
+  margin: 12px 0 0;
+}
+.pickup-photo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 11px 17px;
+  border-radius: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pickup-photo:focus-within {
+  outline: 3px solid #caa968;
+}
+.pickup-result {
+  min-height: 240px;
+  border-width: 3px;
+}
+.pickup-result.ok {
+  border-color: #3f7d4a;
+  background: #eef6ea;
+}
+.pickup-result.warn {
+  border-color: #c39a3e;
+  background: #fbf3e2;
+}
+.pickup-result.bad {
+  border-color: #a8494b;
+  background: #faecea;
+}
+.pickup-result.done {
+  border-color: #56604f;
+  background: #f1f2ec;
+}
+.pickup-label {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 800;
+}
+.pickup-result.ok .pickup-label {
+  color: #2f6a3a;
+}
+.pickup-result.warn .pickup-label {
+  color: #85601b;
+}
+.pickup-result.bad .pickup-label {
+  color: #8c3133;
+}
+.pickup-result h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+.pickup-result .order-number {
+  font-size: 32px;
+}
+.pickup-result ul {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.pickup-result li {
+  padding: 6px 0;
+  border-top: 1px solid #00000014;
+  font-size: 18px;
+}
+.pickup-result li span {
+  display: block;
+  font-size: 16px;
+  color: #45503f;
+}
+.pickup-handover {
+  min-height: 64px;
+  font-size: 20px;
+}
+.pickup-idle {
+  margin: 0;
+  color: var(--staff-muted);
+}
+
+/* Guest phone: pickup QR with the order number beside it. */
+.pickup-qr {
+  flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px auto;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  width: fit-content;
+}
+.pickup-qr figcaption {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  text-align: left;
+}
+.pickup-qr figcaption strong {
+  font-family: Manrope, sans-serif;
+  font-size: 32px;
+  line-height: 1;
+}
+.pickup-qr-ready {
+  flex-direction: column;
+}
+.pickup-qr-ready figcaption {
+  text-align: center;
+}
+
+/* New order Add button: the drink joins the cart only on Add to order. */
+.option-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.option-actions .secondary {
+  min-height: 56px;
+  padding-inline: 20px;
+}
+.option-actions .primary {
+  flex: 1;
+  min-height: 56px;
+  font-size: 18px;
+}
+.app-shell .pos-order .ticket-total > p.add-first {
+  font-weight: 700;
+  color: #85601b;
+}
+.cart-line.just-added {
+  background: #e7f1df;
+  transition: background 1.5s;
+}
+/* Option labels and add-on notes: 14px; notes keep the button's own colour (white when selected). */
+.app-shell .option-row > span {
+  font-size: 14px;
+}
+.app-shell .option-buttons button small {
+  font-size: 14px;
+  color: inherit;
+  opacity: 0.85;
+}
+.pickup-stage {
+  margin: -4px 0 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #85601b;
+}
+
+/* Uncollected drinks: orange after the first time, red after the second. */
+.queue-card.wait-warn {
+  border: 3px solid #d97706;
+}
+/* "Since 1:20 pm" runs below the QR button: 6px clear of it, on late tickets only. */
+.queue-card.wait-warn .queue-card-meta,
+.queue-card.wait-late .queue-card-meta {
+  margin-top: 6px;
+}
+.queue-card.wait-warn time {
+  color: #a35200;
+  font-weight: 700;
+}
+.queue-card.wait-late {
+  border: 3px solid var(--red);
+}
+.queue-card.wait-late time {
+  color: var(--red);
+  font-weight: 700;
+}
+/* The header turns orange / red too, so a late ticket is easy to spot. */
+.queue-card.status-ready.wait-warn header {
+  background: #fbd9a5;
+}
+.queue-card.status-ready.wait-late header {
+  background: #f2c0c0;
+}
+.queue-card.wait-warn .pill.ready,
+.queue-card.wait-late .pill.ready {
+  background: #ffffffc8;
+}
+/* Cancel order below the main button (when the setting says so), full width. */
+.queue-card .ticket-actions .cancel-below {
+  flex: 1 0 100%;
+  min-height: 44px;
+  margin: 0;
+}
+.queue-card .cancel-record {
+  margin: 0;
+  padding: 2px 12px 10px;
+  font-size: 14px;
+  color: var(--red);
+  font-weight: 600;
+}
+.queue-card .ticket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 12px 10px;
+}
+/* Only late tickets get the extra row, so normal tickets stay dense. */
+.queue-card .ticket-actions .discard-button {
+  flex: 1 0 100%;
+}
+.queue-card .ticket-actions .primary {
+  flex: 1;
+  width: auto;
+  margin: 0;
+}
+.queue-card .discard-button {
+  min-height: 48px;
+  padding: 0 14px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+.choice-list {
+  display: grid;
+  gap: 4px;
+  border: 0;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.choice-list legend {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.choice-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.choice-list legend {
+  grid-column: 1 / -1;
+}
+.choice-list label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.choice-list label:has(input:checked) {
+  border-color: var(--green);
+  background: #e7f0e4;
+}
+.choice-list input {
+  flex: 0 0 22px;
+  width: 22px;
+  min-height: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--green);
+}
+@media (max-width: 560px) {
+  .choice-list {
+    grid-template-columns: 1fr;
+  }
+}
+/* Settings-change strip: one slim row per change, tap to dismiss. */
+.settings-strip {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.settings-strip-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 12px;
+  text-align: left;
+  font-size: 16px;
+  color: #3d2c00;
+  background: #fff3c4;
+  border: 1px solid #e3c25a;
+  border-radius: 8px;
+}
+.settings-strip-item > span {
+  flex: 1;
+}
+/* Pickup settings. */
+.pickup-settings {
+  padding: 14px 16px;
+}
+.pickup-settings fieldset {
+  display: grid;
+  gap: 14px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.pickup-settings .setting-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  font-size: 16px;
+}
+.pickup-settings .setting-row > strong {
+  min-width: 170px;
+}
+.pickup-settings .segmented {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1 1 420px;
+}
+/* Both explanations beside the On/Off buttons; the selected one stands out. */
+.pickup-settings .choice-notes {
+  flex: 1 1 260px;
+  display: grid;
+  gap: 2px;
+  margin: 0 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  /* Darker than --muted so the unselected line still reads at 4.5:1. */
+  color: #596057;
+}
+.pickup-settings .choice-notes li.current {
+  color: var(--green);
+  font-weight: 600;
+}
+.pickup-settings .segmented button {
+  min-height: 44px;
+  min-width: 64px;
+  font-size: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffef9;
+}
+.pickup-settings .segmented button.active {
+  background: var(--green);
+  color: #fff;
+}
+.pickup-settings label {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.pickup-settings input[type="number"] {
+  width: 120px;
+  min-height: 44px;
+  font-size: 16px;
+}
+.pickup-undo {
+  margin-top: 10px;
+  min-height: 52px;
+  font-size: 18px;
+}
+
+/* The new-order estimate sits at the end of the filter bar, adding no height. */
+.queue-tabs {
+  align-items: center;
+}
+.queue-tabs .queue-estimate {
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 600;
+  color: #3b4636;
+  white-space: nowrap;
+}
+.ticket-estimate {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3b4636;
+  margin: 4px 0 0;
+}
+@media (max-width: 700px) {
+  .queue-tabs .queue-estimate {
+    margin-left: 0;
+    white-space: normal;
+  }
+}
+
+/* Charity counter choices, same On/Off style as Settings → Pickup. */
+.charity-settings {
+  margin-top: 16px;
+}
+.charity-settings fieldset {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.charity-settings .segmented {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.charity-settings .segmented button {
+  min-height: 44px;
+  min-width: 64px;
+  font-size: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffef9;
+}
+.charity-settings .segmented button.active {
+  background: var(--green);
+  color: #fff;
+}
+/* Waiting-time estimate On/Off in Settings → Queue steps. */
+.estimate-settings {
+  max-width: 980px;
+}
+/* Eight tabs, Ready # and the estimate on one row at 1180×820. */
+.app-shell .queue-tabs {
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+.app-shell .queue-tabs > button {
+  padding: 8px 6px;
+  font-size: 14px;
+  gap: 5px;
+  white-space: nowrap;
+  flex: none;
+}
+.app-shell .queue-tabs > button span {
+  font-size: 12px;
+  padding: 1px 5px;
+  min-width: 0;
+}
+.queue-tabs .ready-by-number input {
+  width: 74px;
+  min-height: 44px;
+  padding: 0 8px;
+  font-size: 17px;
+  font-weight: 700;
+}
+.queue-tabs .queue-estimate {
+  display: grid;
+  flex: none;
+  font-size: 13px;
+  line-height: 1.25;
+  text-align: right;
+  white-space: nowrap;
+}
+/* Three cancel-button choices side by side. */
+.board-layout-options.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 760px) {
+  .board-layout-options.three {
+    grid-template-columns: 1fr;
+  }
+}
+.cancel-place-settings {
+  margin-top: 12px;
+}

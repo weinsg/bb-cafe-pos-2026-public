@@ -1,0 +1,36 @@
+# Laptop setup. Every secret comes from a git-ignored .env (copy .env.example); none is written here.
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://beansbeats:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (copy .env.example)}@db:5432/beansbeats_db
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env (copy .env.example)}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      BARISTA_PASSWORD: ${BARISTA_PASSWORD:-}
+      BOOTH_LEAD_PASSWORD: ${BOOTH_LEAD_PASSWORD:-}
+      GUEST_BASE_URL: ${GUEST_BASE_URL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: beansbeats
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (copy .env.example)}
+      POSTGRES_DB: beansbeats_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beansbeats -d beansbeats_db"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+

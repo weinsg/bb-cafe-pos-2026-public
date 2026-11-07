@@ -1,0 +1,57 @@
+# Server setup (DigitalOcean droplet or VM): docker compose -f docker-compose.prod.yml up --build -d
+# Every secret comes from the server's git-ignored .env; the app refuses to start without them.
+services:
+  app:
+    # Built on the server (--build), or built on a laptop and copied over with the same name.
+    build: .
+    image: beansbeats-app:latest
+    expose:
+      - "8000"
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://beansbeats:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/beansbeats_db
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      BARISTA_PASSWORD: ${BARISTA_PASSWORD:-}
+      BOOTH_LEAD_PASSWORD: ${BOOTH_LEAD_PASSWORD:-}
+      GUEST_BASE_URL: https://${DOMAIN:?Set DOMAIN in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: beansbeats
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: beansbeats_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beansbeats -d beansbeats_db"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+    # No ports: the database is reachable only by the app.
+
+  caddy:
+    image: caddy:2.8
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

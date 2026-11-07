@@ -1,0 +1,52 @@
+# Python (from TCX2004 iP Project)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.db
+*.sqlite3
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / Frontend (React + Vite)
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+frontend/test-results/
+frontend/playwright-report/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Reference material (third-party screenshots/videos), kept local only
+ref/
+
+# Private media kept locally, never published (voice recordings, raw clips)
+media/
