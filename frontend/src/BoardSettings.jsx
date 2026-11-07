@@ -14,7 +14,7 @@ export function BoardSettingsScreen() {
     if (config) setSavedPosition(config.ready_board_position);
   }, [config]);
   // With the charity counter shown, the board splits into thirds.
-  const withCounter = config ? config.charity_show !== "off" : false;
+  const withCounter = config ? config.charity_show !== "off" && config.charity_place === "panel" : false;
   const selected = position || savedPosition || "left";
   async function save(event) {
     event.preventDefault();
@@ -85,14 +85,19 @@ const PERIOD = [
 ];
 
 // What the ready board's charity counter shows. Admin only, like the layout.
+const PLACE = [
+  ["top", "Top line"],
+  ["panel", "Side panel"],
+];
+
 function CharityCounterForm({ config, connected, reload }) {
   const [choice, setChoice] = useState(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [saveError, setSaveError] = useState("");
-  const saved = config ? { show: config.charity_show, period: config.charity_period } : null;
-  const current = { ...(saved || { show: "cups", period: "today" }), ...(choice || {}) };
-  const unchanged = saved && current.show === saved.show && current.period === saved.period;
+  const saved = config ? { show: config.charity_show, period: config.charity_period, place: config.charity_place || "top" } : null;
+  const current = { ...(saved || { show: "cups", period: "today", place: "top" }), ...(choice || {}) };
+  const unchanged = saved && ["show", "period", "place"].every((key) => current[key] === saved[key]);
   async function save(event) {
     event.preventDefault();
     setSaving(true);
@@ -131,6 +136,22 @@ function CharityCounterForm({ config, connected, reload }) {
             </button>
           ))}
         </div>
+        {/* Where the counter goes; both explanations always shown. */}
+        <div className="segmented" role="group" aria-label="Charity counter where">
+          {PLACE.map(([value, label]) => (
+            <button type="button" key={value} aria-pressed={current.place === value} disabled={current.show === "off"} className={current.place === value ? "active" : ""} onClick={() => pick("place", value)}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <ul className="choice-notes place-notes">
+          <li className={current.place === "top" ? "current" : ""}>
+            <strong>Top line:</strong> Ready and In progress take half the board each; the counter sits in the top bar
+          </li>
+          <li className={current.place === "panel" ? "current" : ""}>
+            <strong>Side panel:</strong> Ready, In progress and a large counter panel take one third each
+          </li>
+        </ul>
         <p className="muted small">Counted like Daily sales: refunded and unpaid cancels are left out. The amount is the sales recorded here, shown as "in sales".</p>
         <button className="primary" disabled={unchanged}>{saving ? "Saving…" : "Save charity counter"}</button>
       </fieldset>

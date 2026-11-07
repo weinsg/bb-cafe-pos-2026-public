@@ -3,7 +3,7 @@
 from sqlalchemy import or_
 from sqlmodel import Session, func, select
 
-from .models import BoardSettings, CharityCounter, Order, OrderClosure, OrderItem
+from .models import BoardSettings, CharityCounter, CharityPlace, Order, OrderClosure, OrderItem
 
 
 def ready_board_position(session: Session) -> str:
@@ -13,6 +13,12 @@ def ready_board_position(session: Session) -> str:
 
 def charity_settings(session: Session) -> CharityCounter:
     return session.get(CharityCounter, 1) or CharityCounter()
+
+
+def charity_place(session: Session) -> str:
+    """Where the counter goes: "top" (top line, default) or "panel" (side panel)."""
+    row = session.get(CharityPlace, 1)
+    return "panel" if row and row.place == "panel" else "top"
 
 
 def charity_counter(session: Session, today: str) -> dict | None:
@@ -31,4 +37,4 @@ def charity_counter(session: Session, today: str) -> dict | None:
         query = query.where(Order.event_day == today)
     cups, cents = session.exec(query).one()
     return {"cups": int(cups), "amount_cents": int(cents) if settings.show == "cups_amount" else None,
-            "period": settings.period}
+            "period": settings.period, "place": charity_place(session)}

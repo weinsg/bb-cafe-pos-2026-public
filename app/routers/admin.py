@@ -9,7 +9,7 @@ from sqlmodel import col, select
 from ..auth import RequireBarista, RequireBoothLead, RequireAdmin, can_cancel, can_view_completed
 from ..database import SessionDep
 from ..models import (AuditLog, Order, ClosedDay, SyncReceipt, CompletedAccess, CancelAccess, User, BoardSettings,
-                      QueueSettings, PickupSettings, CharityCounter, EstimateSettings, TicketSettings)
+                      QueueSettings, PickupSettings, CharityCounter, CharityPlace, EstimateSettings, TicketSettings)
 from .sync import lock_counter
 from ..schemas import (AuditLogResponse, ResetDayRequest, CompletedAccessUpdate, UserResponse, BoardSettingsUpdate,
                        QueueSettingsUpdate, PickupSettingsUpdate, CharityCounterUpdate,
@@ -63,7 +63,7 @@ async def update_board_settings(request: BoardSettingsUpdate, session: SessionDe
 
 
 COUNTER_LABELS = {"off": "off", "cups": "cups", "cups_amount": "cups and amount",
-                  "today": "today", "all": "all event days"}
+                  "today": "today", "all": "all event days", "top": "in the top line", "panel": "in a side panel"}
 
 
 @router.patch("/charity-counter")
@@ -72,22 +72,26 @@ async def update_charity_counter(request: CharityCounterUpdate, session: Session
     """Admin chooses what the ready board's charity counter shows (last save wins)."""
     lock_counter(session, "charity-counter")
     settings = session.get(CharityCounter, 1) or CharityCounter()
-    before = (settings.show, settings.period)
+    place = session.get(CharityPlace, 1) or CharityPlace()
+    before = (settings.show, settings.period, place.place)
     settings.show, settings.period = request.show, request.period
+    if request.place:
+        place.place = request.place
     session.add(settings)
-    changed = before != (settings.show, settings.period)
+    session.add(place)
+    changed = before != (settings.show, settings.period, place.place)
     if changed:
         session.add(AuditLog(
             id=_change_id(x_change_id), staff_username=user.username, action="CHARITY_COUNTER_CHANGED",
             details=f"Charity counter: {COUNTER_LABELS[settings.show]}"
-                    + ("" if settings.show == "off" else f", {COUNTER_LABELS[settings.period]}"),
+                    + ("" if settings.show == "off" else f", {COUNTER_LABELS[settings.period]}, {COUNTER_LABELS[place.place]}"),
         ))
     session.commit()
     if changed:
         await _announce("board_settings_changed")
     else:
         await broadcaster.publish("board_settings_changed", {})
-    return {"show": settings.show, "period": settings.period}
+    return {"show": settings.show, "period": settings.period, "place": place.place}
 
 
 @router.patch("/queue-settings")

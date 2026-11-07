@@ -112,7 +112,7 @@ Christmas Together 2026 · 26–29 Nov · Hall F, Marina Bay Sands · Live: http
 
 ## Tested
 
-Latest backend checks: 91 tests passed on both SQLite and PostgreSQL (7 November).
+Latest backend checks: 92 tests passed on both SQLite and PostgreSQL (7 November).
 
 - All 20 browser tests passed (7 Nov), including Wi-Fi drop and recovery
 - Load test: 300 guest phones for 10 minutes on a 1-CPU server, no errors

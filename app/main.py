@@ -13,7 +13,7 @@ from sqlmodel import Session, select
 
 from .auth import hash_password
 from .database import SessionDep, create_db_and_tables, engine
-from .board import charity_settings, ready_board_position
+from .board import charity_place, charity_settings, ready_board_position
 from .models import (Counter, EstimateSettings, TicketSettings, MenuItem, MenuItemOptions, MenuVersion, PickupSettings, QueueSettings,
                      Surcharge, User)
 from .routers import admin, auth, events, menu, orders, reports, sync
@@ -124,6 +124,7 @@ def public_config(session: SessionDep):
         "ready_board_position": ready_board_position(session),
         # The board's charity counter choice (Settings → Ready board).
         **{f"charity_{key}": value for key, value in charity_settings(session).model_dump(include={"show", "period"}).items()},
+        "charity_place": charity_place(session),
         "iced_surcharge_cents": surcharges.get("iced", 100),
         "oat_surcharge_cents": surcharges.get("oat", 100),
         "use_making_step": (session.get(QueueSettings, 1) or QueueSettings()).use_making_step,

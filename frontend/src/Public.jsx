@@ -105,24 +105,34 @@ export function ReadyBoard() {
     <BoardLane key="making" title="In progress" kind="making" orders={board?.making} columns={smallScreen ? 1 : 2} />,
   ];
   const tally = board?.charity_counter;
-  // The charity counter takes 1/3 of the board, on the side away from Ready.
-  const counter = tally && (
+  const amount =
+    tally?.amount_cents != null &&
+    (tally.amount_cents / 100).toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Top line (default; the counter in the top bar, Ready and In progress half each) or
+  // Side panel (the counter takes 1/3 of the board, on the side away from Ready).
+  const topLine = tally && tally.place !== "panel" && (
+    <p className="board-counter-top" aria-label="Charity counter">
+      <strong>{tally.cups.toLocaleString("en-SG")}</strong> {tally.cups === 1 ? "cup" : "cups"}{" "}
+      {tally.period === "all" ? "so far" : "today"}
+      {amount && (
+        <>
+          {" · "}
+          <strong>S${amount}</strong> in sales
+        </>
+      )}
+      <span>All profits go to Singapore Red Cross Young Hearts</span>
+    </p>
+  );
+  const counter = tally && tally.place === "panel" && (
     <aside className="board-counter" aria-label="Charity counter" key="counter">
       <p className="counter-kicker">For charity</p>
       <strong className="counter-cups">{tally.cups.toLocaleString("en-SG")}</strong>
       <span className="counter-unit">
         {tally.cups === 1 ? "cup" : "cups"} {tally.period === "all" ? "so far" : "today"}
       </span>
-      {tally.amount_cents != null && (
+      {amount && (
         <p className="counter-amount">
-          <strong>
-            S$
-            {(tally.amount_cents / 100).toLocaleString("en-SG", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </strong>{" "}
-          in sales
+          <strong>S${amount}</strong> in sales
         </p>
       )}
       <p className="counter-cause">All profits go to Singapore Red Cross Young Hearts</p>
@@ -133,6 +143,7 @@ export function ReadyBoard() {
       <header className="board-header">
         <Brand light />
         <h1 className="board-title">Order status</h1>
+        {topLine}
         {board?.estimate && (
           // The Queue's new-order estimate; Settings → Queue steps can switch it off.
           <p className="board-estimate">

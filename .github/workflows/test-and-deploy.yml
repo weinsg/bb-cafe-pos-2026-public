@@ -1,0 +1,44 @@
+# Backend tests on every push and pull request; on main, an optional deploy to the server.
+# The deploy job runs only when the repository secrets DEPLOY_HOST and DEPLOY_SSH_KEY are set.
+# The server limits that key to one forced deploy command, so GitHub cannot open a shell on it.
+name: test-and-deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install -r requirements.txt
+      - run: python tests/run_tests.py
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+    steps:
+      - name: Skip when the deploy secrets are not set
+        if: env.DEPLOY_HOST == '' || env.DEPLOY_SSH_KEY == ''
+        run: echo "Deploy secrets not set; skipping deploy."
+      - name: Deploy (forced command on the server pulls and rebuilds)
+        if: env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != ''
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -t ed25519 "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "deploy@$DEPLOY_HOST" deploy
+          rm -f ~/.ssh/deploy_key

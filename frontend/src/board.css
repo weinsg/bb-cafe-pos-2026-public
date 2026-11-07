@@ -24,6 +24,7 @@
   height: 46px;
 }
 .board-title {
+  white-space: nowrap;
   font-size: clamp(22px, 1.6vw, 32px);
   letter-spacing: -0.8px;
   line-height: 1.1;
@@ -401,5 +402,46 @@
     flex-basis: 100%;
     margin: 0;
     white-space: normal;
+  }
+}
+
+/* "Top line" — the original board; the counter sits in the top bar. */
+.board-counter-top {
+  margin: 0 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  column-gap: 6px;
+  font-size: clamp(16px, 1.15vw, 22px);
+  font-weight: 600;
+  color: #fffdf2;
+  text-align: right;
+  line-height: 1.2;
+}
+.board-counter-top strong {
+  font-size: clamp(20px, 1.5vw, 30px);
+  color: #f3d58b;
+}
+.board-counter-top span {
+  flex-basis: 100%;
+  font-size: clamp(13px, 0.85vw, 16px);
+  font-weight: 500;
+  color: #c9d8bd;
+}
+.board-counter-top + .board-estimate,
+.board-counter-top + .public-connection {
+  margin-left: 24px;
+}
+@media (max-width: 700px) {
+  .board-header {
+    flex-wrap: wrap;
+  }
+  .board-counter-top {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    margin: 0;
   }
 }

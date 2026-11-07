@@ -124,6 +124,14 @@ class QueueSettings(SQLModel, table=True):
     use_making_step: bool = True
 
 
+# Where the counter goes: "top" (top line, default) or "panel" (1/3 side panel).
+# Own table, so existing volumes need no ALTER.
+class CharityPlace(SQLModel, table=True):
+    __tablename__ = "charity_place"
+    id: int = Field(default=1, primary_key=True)
+    place: str = "top"
+
+
 # The waiting-time estimate on the ready board and on the guest's phone can each be
 # switched off; staff screens always show it. Own table, no ALTER.
 class EstimateSettings(SQLModel, table=True):

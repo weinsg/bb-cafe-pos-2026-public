@@ -11,9 +11,9 @@ class TestCharityCounter(Booth):
     def counter(self):
         return self.client.get("/api/orders/ready-board").json()["charity_counter"]
 
-    def set_counter(self, show, period, headers=None):
-        return self.client.patch("/api/admin/charity-counter", headers=headers or self.admin,
-                                 json={"show": show, "period": period})
+    def set_counter(self, show, period, headers=None, place=None):
+        body = {"show": show, "period": period} | ({"place": place} if place else {})
+        return self.client.patch("/api/admin/charity-counter", headers=headers or self.admin, json=body)
 
     def report(self, day):
         return self.client.get(f"/api/reports/daily?event_day={day}", headers=self.lead).json()
@@ -30,17 +30,17 @@ class TestCharityCounter(Booth):
         self.assertEqual(self.set_counter("cups_amount", "all", self.lead).status_code, 403)
         self.assertEqual(self.set_counter("cups_amount", "all", self.barista).status_code, 403)
         self.assertEqual(self.set_counter("lots", "today").status_code, 422)
-        self.assertEqual(self.set_counter("cups_amount", "all").json(), {"show": "cups_amount", "period": "all"})
+        self.assertEqual(self.set_counter("cups_amount", "all").json(), {"show": "cups_amount", "period": "all", "place": "top"})
         [row] = self.client.get("/api/admin/setting-changes", headers=self.barista).json()
-        self.assertEqual((row["staff_username"], row["details"]), ("admin", "Charity counter: cups and amount, all event days"))
+        self.assertEqual((row["staff_username"], row["details"]), ("admin", "Charity counter: cups and amount, all event days, in the top line"))
         self.set_counter("cups_amount", "all")  # no change: no second audit row
         self.assertEqual(len(self.client.get("/api/admin/setting-changes", headers=self.barista).json()), 1)
 
     def test_board_shows_cups_amount_or_nothing(self):
         self.order(price=700)
-        self.assertEqual(self.counter(), {"cups": 1, "amount_cents": None, "period": "today"})
+        self.assertEqual(self.counter(), {"cups": 1, "amount_cents": None, "period": "today", "place": "top"})
         self.set_counter("cups_amount", "today")
-        self.assertEqual(self.counter(), {"cups": 1, "amount_cents": 700, "period": "today"})
+        self.assertEqual(self.counter(), {"cups": 1, "amount_cents": 700, "period": "today", "place": "top"})
         self.set_counter("off", "today")
         self.assertIsNone(self.counter())
         board = self.client.get("/api/orders/ready-board").text
@@ -79,6 +79,20 @@ class TestCharityCounter(Booth):
         self.assertEqual(self.counter()["cups"], 4)
         self.set_counter("cups", "today")
         self.assertEqual(self.counter()["cups"], 1)
+
+    def test_where_defaults_to_the_top_line_admin_only_and_audited(self):
+        """Top line by default; Side panel on request; Admin only; audited."""
+        self.assertEqual(self.client.get("/api/config").json()["charity_place"], "top")
+        self.assertEqual(self.counter()["place"], "top")
+        self.assertEqual(self.set_counter("cups", "today", self.lead, place="panel").status_code, 403)
+        self.assertEqual(self.set_counter("cups", "today", place="side").status_code, 422)
+        self.assertEqual(self.set_counter("cups", "today", place="panel").json()["place"], "panel")
+        self.assertEqual(self.counter()["place"], "panel")
+        self.assertEqual(self.client.get("/api/config").json()["charity_place"], "panel")
+        [row] = self.client.get("/api/admin/setting-changes", headers=self.barista).json()
+        self.assertEqual(row["details"], "Charity counter: cups, today, in a side panel")
+        # Saving without a place keeps the current one.
+        self.assertEqual(self.set_counter("cups_amount", "today").json()["place"], "panel")
 
 
 if __name__ == "__main__":

@@ -41,6 +41,7 @@ class CharityCounterUpdate(BaseModel):
     """What the ready board's charity counter shows, and over which days."""
     show: Literal["off", "cups", "cups_amount"]
     period: Literal["today", "all"]
+    place: Optional[Literal["top", "panel"]] = None  # top line (default) or side panel
 
 
 class QueueSettingsUpdate(BaseModel):
