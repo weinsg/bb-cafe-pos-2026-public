@@ -16,7 +16,7 @@ from ..auth import RequireBarista, RequireBoothLead, RequireCompletedAccess
 from .. import database
 from ..database import SessionDep
 from ..models import (AuditLog, MenuItem, MenuItemOptions, Order, OrderItem, OrderRevision, ClosedDay, PickupSettings,
-                      EstimateSettings, EstimateFormat, OrderClosure)
+                      EstimateSettings, EstimateFormat, OrderClosure, QueueSettings)
 from ..schemas import (
     CancelledOrderResponse,
     GuestDrink,
@@ -269,10 +269,12 @@ def get_ready_board(session: SessionDep):
         .where(Order.status == "ready")
         .order_by(Order.ready_at.desc())
     ).all()
+    # With the Making step skipped, In progress lists the Received orders (newest first).
+    in_progress = ("making",) if (session.get(QueueSettings, 1) or QueueSettings()).use_making_step else ("received", "making")
     making_orders = session.exec(
         select(Order)
-        .where(Order.status == "making")
-        .order_by(Order.making_at.desc())
+        .where(col(Order.status).in_(in_progress))
+        .order_by(func.coalesce(Order.making_at, Order.created_at).desc())
     ).all()
 
     return {
@@ -461,6 +463,8 @@ def _shared_figures(session, event_day: str, peek: bool = False) -> dict | None:
         "stats": estimate.day_stats(session, event_day),
         "show_estimate": (session.get(EstimateSettings, 1) or EstimateSettings()).on_guest,
         "estimate_display": (session.get(EstimateFormat, 1) or EstimateFormat()).display,
+        # With the Making step off, the guest page shows Received / Ready to collect only.
+        "use_making_step": (session.get(QueueSettings, 1) or QueueSettings()).use_making_step,
         "waiting": [(order_id, estimate.utc(created)) for order_id, created in waiting],
     }
     if len(_shared_cache) > 8:
@@ -537,6 +541,7 @@ async def get_guest_status(order_id: str) -> GuestStatusResponse:
         estimate_low_min=low,
         estimate_display=shared["estimate_display"],
         estimate_high_min=high,
+        use_making_step=shared["use_making_step"],
         orders_ahead=ahead,
         average_wait_min=stats.average_wait_min if shown else None,
     )

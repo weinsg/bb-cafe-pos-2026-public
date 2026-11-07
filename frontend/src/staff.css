@@ -956,28 +956,11 @@ dialog:has(.ticket-confirm) {
   font-size: 18px;
 }
 
-/* The new-order estimate sits at the end of the filter bar, adding no height. */
-.queue-tabs {
-  align-items: center;
-}
-.queue-tabs .queue-estimate {
-  margin-left: auto;
-  font-size: 15px;
-  font-weight: 600;
-  color: #3b4636;
-  white-space: nowrap;
-}
 .ticket-estimate {
   font-size: 16px;
   font-weight: 600;
   color: #3b4636;
   margin: 4px 0 0;
-}
-@media (max-width: 700px) {
-  .queue-tabs .queue-estimate {
-    margin-left: 0;
-    white-space: normal;
-  }
 }
 
 /* Charity counter choices, same On/Off style as Settings → Pickup. */
@@ -1027,21 +1010,6 @@ dialog:has(.ticket-confirm) {
   padding: 1px 5px;
   min-width: 0;
 }
-.queue-tabs .ready-by-number input {
-  width: 74px;
-  min-height: 44px;
-  padding: 0 8px;
-  font-size: 17px;
-  font-weight: 700;
-}
-.queue-tabs .queue-estimate {
-  display: grid;
-  flex: none;
-  font-size: 13px;
-  line-height: 1.25;
-  text-align: right;
-  white-space: nowrap;
-}
 /* Three cancel-button choices side by side. */
 .board-layout-options.three {
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1067,38 +1035,6 @@ dialog:has(.ticket-confirm) {
 .charity-settings .place-notes li.current {
   color: var(--green);
   font-weight: 600;
-}
-/* Ready # hint: beside the box where the bar has room; under it while focused elsewhere. */
-.queue-tabs .ready-by-number {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ready-hint {
-  display: grid;
-  font-size: 13px;
-  line-height: 1.25;
-  font-weight: 700;
-  color: #8a5a00;
-  white-space: nowrap;
-}
-@media (max-width: 1365px) {
-  .ready-hint {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    z-index: 5;
-    padding: 6px 10px;
-    border: 1px solid #e3c98f;
-    border-radius: 8px;
-    background: #fff8e6;
-    box-shadow: 0 4px 12px #0000001f;
-  }
-  .ready-by-number:focus-within .ready-hint {
-    display: grid;
-  }
 }
 /* Daily sales views and CSV menu. */
 .report-toolbar {
@@ -1193,22 +1129,194 @@ dialog:has(.ticket-confirm) {
 .cancel-tally .tally-final dd {
   color: var(--green);
 }
-/* Phones and small tablets: the one-row Queue bar scrolls sideways inside itself,
-   so the page never becomes wider than the screen (Safari would zoom the whole page out). */
+/* Phones and small tablets: the Queue tabs wrap onto more rows,
+   so every tab is on screen without swiping and the page is never wider than the screen (no zoom-out). */
 @media (max-width: 1099px) {
   .app-shell .queue-tabs {
     max-width: 100%;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-  }
-  .app-shell .queue-tabs::-webkit-scrollbar {
-    display: none;
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 }
-@media (max-width: 760px) {
-  .ready-hint,
-  .ready-by-number:focus-within .ready-hint {
+/* Phones: the top menu wraps too (no item hidden behind a swipe). */
+@media (max-width: 720px) {
+  .app-shell .sidebar nav {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    padding-bottom: 10px;
+  }
+  .app-shell .sidebar nav .nav-item {
+    flex: 0 0 auto;
+  }
+}
+
+/* Queue bar: tabs, then the Ready # box with its hint always beside it
+   (never a pop-up, never over the tickets), then the new-order estimate. 1600px and wider: one row with the
+   estimate. 1100–1599px: one row; the estimate moves to the side bar under Queue, so the tickets do not move
+. Below 1100px: the tabs strip scrolls sideways and the box, hint and estimate get their own row. */
+.queue-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.app-shell .queue-bar .queue-tabs {
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-bottom: 0;
+}
+.queue-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 0 auto;
+  min-width: 0;
+}
+.ready-by-number {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.ready-by-number input {
+  width: 100px;
+  min-height: 44px;
+  padding: 0 8px;
+  font-size: 17px;
+  font-weight: 800;
+  border: 2px solid #b8862b;
+  border-radius: 8px;
+  background: #fff;
+}
+.ready-by-number input::placeholder {
+  color: #7a5a1a;
+  opacity: 1;
+}
+.ready-hint {
+  display: block;
+  padding: 3px 10px;
+  border: 2px solid #d9a93f;
+  border-radius: 10px;
+  background: #fff1c7;
+  color: #3d2700;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.ready-hint .hint-long {
+  display: grid;
+  font-size: 15px;
+}
+.ready-hint .hint-short {
+  display: none;
+  line-height: 32px;
+}
+@media (max-width: 1299px) {
+  .ready-hint .hint-long {
     display: none;
   }
+  .ready-hint .hint-short {
+    display: block;
+  }
+}
+.queue-tools .queue-estimate {
+  display: grid;
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: right;
+  white-space: nowrap;
+  color: #3b4636;
+}
+.queue-tools .queue-estimate b {
+  font-weight: 600;
+}
+/* Side bar, 1100–1599px: "New order: about 7–11 min" under the Queue button. */
+.side-slot:empty {
+  display: none;
+}
+.side-slot .queue-estimate {
+  display: grid;
+  gap: 2px;
+  margin: 2px 2px 4px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  background: #ffffff1f;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+.side-slot .queue-estimate b {
+  display: block;
+  font-size: 15px;
+}
+@media (max-width: 1099px) {
+  .queue-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .app-shell .queue-bar .queue-tabs {
+    flex: 1 1 100%;
+  }
+  .queue-tools {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 500px) {
+  .queue-tools .queue-estimate {
+    margin-left: 0;
+    text-align: left;
+    white-space: normal;
+  }
+}
+/* Two or more orders share the typed digits: pick one, oldest first. */
+.ready-choice {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 2px solid #d9a93f;
+  border-radius: 12px;
+  background: #fff8e6;
+}
+.ready-choice p {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+.ready-choice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ready-choice-buttons button {
+  min-height: 52px;
+  padding: 0 18px;
+  font-size: 18px;
+  font-weight: 700;
+}
+/* Short laptop screens (768px tall) with the estimate in the side bar: slightly shorter menu buttons,
+   so Board, the signed-in name and Sign out stay on screen without scrolling the side bar. */
+@media (min-width: 721px) and (max-height: 800px) {
+  .app-shell .nav-item {
+    min-height: 54px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  .app-shell .rail-logo {
+    height: 44px;
+  }
+  .side-slot .queue-estimate {
+    padding: 4px;
+    font-size: 11px;
+  }
+  .side-slot .queue-estimate b {
+    font-size: 14px;
+  }
+}
+.queue-estimate .nowrap {
+  white-space: nowrap;
 }

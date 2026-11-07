@@ -112,7 +112,8 @@ async def update_queue_settings(request: QueueSettingsUpdate, session: SessionDe
         ))
     session.commit()
     if previous != settings.use_making_step:
-        await _announce("changed")
+        # Guest pages refetch too: their steps follow this setting.
+        await _announce("guest_settings_changed")
     else:
         await broadcaster.publish("changed", {})
     return {"use_making_step": settings.use_making_step}

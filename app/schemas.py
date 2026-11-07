@@ -188,6 +188,7 @@ class GuestStatusResponse(BaseModel):
     estimate_display: str = "range"  # range / upper / average / average_upper
     orders_ahead: Optional[int] = None
     average_wait_min: Optional[int] = None
+    use_making_step: bool = True  # False → the guest page shows Received / Ready to collect
 
 
 class WaitEstimateResponse(BaseModel):

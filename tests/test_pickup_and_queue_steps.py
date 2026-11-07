@@ -30,6 +30,18 @@ class TestQueueSteps(unittest.TestCase):
         self.assertEqual([log["details"] for log in changes],
                          ["Making step switched off", "Making step switched on", "Making step switched off"])
 
+    def test_guest_status_carries_the_making_step_setting(self):
+        """The guest page learns whether to show the Making step, and a change reaches it."""
+        order = self.client.post("/api/orders", headers=self.barista, json={
+            "idempotency_key": str(uuid.uuid4()), "device_id": "tablet_A", "first_name": "Mei",
+            "items": [{"item_name": "Latte", "unit_price_cents": 800, "quantity": 1}]}).json()
+        status = lambda: self.client.get(f"/api/orders/{order['id']}/status").json()
+        self.assertTrue(status()["use_making_step"])
+        self.client.patch("/api/admin/queue-settings", headers=self.lead, json={"use_making_step": False})
+        self.assertFalse(status()["use_making_step"])
+        self.client.patch("/api/admin/queue-settings", headers=self.lead, json={"use_making_step": True})
+        self.assertTrue(status()["use_making_step"])
+
     def test_received_order_can_go_straight_to_ready_on_both_write_paths(self):
         self.client.patch("/api/admin/queue-settings", headers=self.lead, json={"use_making_step": False})
         direct = self.client.post("/api/orders", headers=self.barista, json={
@@ -53,6 +65,14 @@ class TestQueueSteps(unittest.TestCase):
         board = self.client.get("/api/orders/ready-board").json()
         self.assertEqual({o["order_number"] for o in board["ready"]}, {direct["order_number"], synced["order_number"]})
         self.assertEqual(board["making"], [])
+        # With Making skipped, a Received order shows under In progress until Ready.
+        waiting = self.client.post("/api/orders", headers=self.barista, json={
+            "idempotency_key": str(uuid.uuid4()), "device_id": "tablet_A", "first_name": "Wai",
+            "items": [{"item_name": "Latte", "unit_price_cents": 800, "quantity": 1}]}).json()
+        board = self.client.get("/api/orders/ready-board").json()
+        self.assertEqual([o["order_number"] for o in board["making"]], [waiting["order_number"]])
+        self.client.patch("/api/admin/queue-settings", headers=self.lead, json={"use_making_step": True})
+        self.assertEqual(self.client.get("/api/orders/ready-board").json()["making"], [])
 
 
 class TestPickupLookup(unittest.TestCase):

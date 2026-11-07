@@ -36,9 +36,9 @@ All six modules in the brief are built and live at https://165-22-242-253.sslip.
 ## Results
 
 - **All 6 required modules live**, plus 8 extras.
-- **98 automated backend tests** pass on both SQLite and PostgreSQL.
-- **23 automated browser tests** pass, covering the full order flow, a Wi-Fi drop and recovery, pickup scanning, cancel, the ready board, the sales report and phone screens.
-- **208 written acceptance tests:** 166 fully passed; 13 passed in testing with only a real-device check left; 26 waiting on real phones, tablets or the hall itself; 3 still open (two need a working connection between booth devices without internet, and one is the 300-phone test on the live server).
+- **99 automated backend tests** pass on both SQLite and PostgreSQL.
+- **25 automated browser tests** pass, covering the full order flow, a Wi-Fi drop and recovery, pickup scanning, cancel, the ready board, the sales report and phone screens.
+- **211 written acceptance tests:** 169 fully passed; 13 passed in testing with only a real-device check left; 26 waiting on real phones, tablets or the hall itself; 3 still open (two need a working connection between booth devices without internet, and one is the 300-phone test on the live server).
 - **Load:** 300 guest phones checking for 10 minutes on a 1-CPU test server. 95% of answers came within **10 ms**, with **0 errors**. Before the fix, the old design took **8.4 s** in the same test and **25.6 s** on the live server. Even with live push down on all 300 phones, answers stayed under **0.3 s**.
 - **Speed at the counter:** an order takes a few taps, marking Ready takes 1 tap (or 3 digits + Enter), and the queue shows **10 tickets on one tablet screen** without scrolling.
 - **Matches the POS:** cancels record whether money was refunded, so the daily total lines up with the organiser's POS.

@@ -1314,8 +1314,9 @@ dialog::backdrop {
   backdrop-filter: blur(3px);
 }
 dialog > p {
-  font-size: 13px;
-  color: #818973;
+  font-size: 18px;
+  line-height: 1.45;
+  color: #26301f;
 }
 .dialog-heading {
   display: flex;
@@ -1335,7 +1336,8 @@ dialog > p {
   margin-top: 24px;
 }
 .dialog-actions button {
-  font-size: 12px;
+  min-height: 48px;
+  font-size: 16px;
 }
 .stack-form {
   display: flex;

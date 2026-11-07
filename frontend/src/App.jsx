@@ -276,10 +276,10 @@ function StaffApp() {
         </span>
         <nav aria-label="Staff navigation">
           {allowed.map(([id, label, icon]) => (
+            <React.Fragment key={id}>
             <a
               href={`#${id}`}
               aria-label={label}
-              key={id}
               className={`nav-item ${current === id ? "selected" : ""}`}
               aria-current={current === id ? "page" : undefined}
             >
@@ -289,6 +289,9 @@ function StaffApp() {
                 <span className="nav-count">{active}</span>
               )}
             </a>
+            {/* The Queue screen puts its new-order estimate here on tablets. */}
+            {id === "queue" && <div id="side-slot" className="side-slot" />}
+            </React.Fragment>
           ))}
         </nav>
         <div className="sidebar-bottom">

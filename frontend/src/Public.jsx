@@ -281,8 +281,13 @@ export function GuestPage({ id }) {
   // Warn the guest once the drink has waited past the first reminder time.
   const spoilWarning =
     ready && order.warn_minutes != null && waitedMinutes >= order.warn_minutes;
-  const steps = ["received", "making", "ready"];
-  const position = collected ? 3 : steps.indexOf(order?.status);
+  // With the Making step off, two steps (an order still in Making keeps all three).
+  const steps =
+    order?.use_making_step === false && order?.status !== "making"
+      ? ["received", "ready"]
+      : ["received", "making", "ready"];
+  const stepNames = { received: "Received", making: "Making", ready: "Ready to collect" };
+  const position = collected ? steps.length : steps.indexOf(order?.status);
   return (
     <main
       className={`guest-page ${ready ? "guest-ready" : ""} ${flash ? "ready-flash" : ""}`}
@@ -402,9 +407,7 @@ export function GuestPage({ id }) {
                       index + 1
                     )}
                   </span>
-                  <strong>
-                    {["Received", "Making", "Ready to collect"][index]}
-                  </strong>
+                  <strong>{stepNames[step]}</strong>
                 </li>
               ))}
             </ol>

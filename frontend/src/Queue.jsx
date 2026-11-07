@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { changeStatus, db, eventDay, isActive, reopenCollected } from "./data";
 import { useResource } from "./useResource";
@@ -16,6 +17,31 @@ function timestamp(value) {
     minute: "2-digit",
     timeZone: "Asia/Singapore",
   });
+}
+
+// True while the media query matches (re-checked when the window is resized or rotated).
+function useMedia(query) {
+  const [match, setMatch] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const list = window.matchMedia(query);
+    const update = () => setMatch(list.matches);
+    update();
+    list.addEventListener("change", update);
+    return () => list.removeEventListener("change", update);
+  }, [query]);
+  return match;
+}
+
+// "New order: about X–Y min · Avg wait today: Z min": in the filter bar, or in the side bar on tablets.
+function QueueEstimate({ figures }) {
+  return (
+    <span className="queue-estimate" role="status">
+      <span>
+        New order: <b>about <span className="nowrap">{figures.new_order_low_min}–{figures.new_order_high_min} min</span></b>
+      </span>
+      {figures.average_wait_min != null && <span>Avg wait today: {figures.average_wait_min} min</span>}
+    </span>
+  );
 }
 
 export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
@@ -139,36 +165,48 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
   // Type 012 (or A012) and Enter to mark that order Ready to collect.
   const [readyNo, setReadyNo] = useState("");
   const [notice, setNotice] = useState("");
+  // Two or more Received/Making orders share the typed digits (A001 and T001): staff pick one, oldest first.
+  const [choice, setChoice] = useState(null);
   const numberBox = useRef(null);
-  async function readyByNumber(text) {
-    const typed = text.trim().toUpperCase();
-    setReadyNo("");
-    setError("");
-    setNotice("");
-    if (!typed) return;
-    const digitsOnly = /^\d{1,3}$/.test(typed);
-    const same = (o) =>
-      digitsOnly ? o.order_number.slice(-3) === typed.padStart(3, "0") : o.order_number.toUpperCase() === typed;
-    const matches = orders.filter((o) => o.event_day === eventDay() && same(o));
-    const open = matches.filter(isActive);
-    if (open.length > 1)
-      return setError(
-        `${open.map((o) => o.order_number).join(" and ")} both end in ${typed.padStart(3, "0")}: type the letter too, e.g. ${open[0].order_number}.`,
-      );
-    const [order] = open;
-    if (!order)
-      return setError(
-        matches.length
-          ? `${matches[0].order_number} is ${matches[0].status === "collected" ? "already collected" : matches[0].status}; nothing changed.`
-          : `No order ${digitsOnly ? typed.padStart(3, "0") : typed} today.`,
-      );
-    if (order.status === "ready") return setNotice(`${order.order_number} is already Ready to collect.`);
+  async function markReady(order) {
+    setChoice(null);
     try {
       await changeStatus(order, "ready");
       setNotice(`${order.order_number} ${order.first_name || ""} → Ready to collect`.replace("  ", " "));
     } catch (err) {
       setError(`Could not save status: ${err.message}`);
     }
+  }
+  async function readyByNumber(text) {
+    const typed = text.trim().toUpperCase();
+    setReadyNo("");
+    setError("");
+    setNotice("");
+    if (!typed) return;
+    // While the choice is open, one digit picks a button (type 2 + Enter on the number pad).
+    if (choice && /^\d$/.test(typed)) {
+      const picked = choice[Number(typed) - 1];
+      if (picked) return markReady(picked);
+      return setError(`Type 1 to ${choice.length}, or tap the order.`);
+    }
+    setChoice(null);
+    const digitsOnly = /^\d{1,3}$/.test(typed);
+    const same = (o) =>
+      digitsOnly ? o.order_number.slice(-3) === typed.padStart(3, "0") : o.order_number.toUpperCase() === typed;
+    const matches = orders.filter((o) => o.event_day === eventDay() && same(o));
+    // Only orders still Received or Making count; one already Ready never blocks another.
+    const open = matches
+      .filter((o) => o.status === "received" || o.status === "making")
+      .sort((x, y) => x.created_at.localeCompare(y.created_at));
+    if (open.length > 1) return setChoice(open);
+    if (open.length === 1) return markReady(open[0]);
+    const ready = matches.find((o) => o.status === "ready");
+    if (ready) return setNotice(`${ready.order_number} is already Ready to collect.`);
+    return setError(
+      matches.length
+        ? `${matches[0].order_number} is ${matches[0].status === "collected" ? "already collected" : matches[0].status}; nothing changed.`
+        : `No order ${digitsOnly ? typed.padStart(3, "0") : typed} today.`,
+    );
   }
   const readyNoRef = useRef("");
   readyNoRef.current = readyNo;
@@ -179,7 +217,8 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
       if (document.querySelector("dialog[open]")) return;
       const field = event.target.closest?.("input, textarea, select, [contenteditable]");
       if (field) return;
-      if (/^[0-9]$/.test(event.key) || (/^[abAB]$/.test(event.key) && !readyNoRef.current)) {
+      if (event.key === "Escape") setChoice(null);
+      if (/^[0-9]$/.test(event.key) || (/^[a-zA-Z]$/.test(event.key) && !readyNoRef.current)) {
         event.preventDefault();
         setReadyNo((v) => (v + event.key).slice(0, 4));
         numberBox.current?.focus();
@@ -214,6 +253,11 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
       setBusy(new Set());
     }
   }
+  // From 1100 to 1599px the estimate sits in the side bar so the tabs, Ready # box
+  // and hint fit one row and the tickets do not move; wider, it stays in the bar; narrower, on the row under the tabs.
+  const estimateInSideBar = useMedia("(min-width: 1100px) and (max-width: 1599px)");
+  const [sideSlot, setSideSlot] = useState(null);
+  useEffect(() => setSideSlot(document.getElementById("side-slot")), []);
   // Late (Ready 30+ min) tab; Cancelled after Completed; no To make tab. With the Making step
   // Off, the Making tab hides unless orders are still in Making.
   const showMaking = useMaking || groups.making.length > 0;
@@ -230,58 +274,75 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
   ];
   return (
     <>
-      <div
-        className="category-tabs queue-tabs"
-        role="group"
-        aria-label="Filter queue"
-      >
-        {tabs.map(([id, text]) => (
-          <button
-            key={id}
-            aria-pressed={filter === id}
-            className={filter === id ? "active" : ""}
-            onClick={() => {
-              setFilter(id);
-              setError("");
-              setNotice("");
+      <div className="queue-bar">
+        <div className="category-tabs queue-tabs" role="group" aria-label="Filter queue">
+          {tabs.map(([id, text]) => (
+            <button
+              key={id}
+              aria-pressed={filter === id}
+              className={filter === id ? "active" : ""}
+              onClick={() => {
+                setFilter(id);
+                setError("");
+                setNotice("");
+              }}
+            >
+              {text}
+              <span>{groups[id].length}</span>
+            </button>
+          ))}
+        </div>
+        <div className="queue-tools">
+          <form
+            className="ready-by-number"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void readyByNumber(readyNo);
             }}
           >
-            {text}
-            <span>{groups[id].length}</span>
-          </button>
-        ))}
-        <form
-          className="ready-by-number"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void readyByNumber(readyNo);
-          }}
-        >
-          <input
-            ref={numberBox}
-            value={readyNo}
-            onChange={(e) => setReadyNo(e.target.value.slice(0, 4))}
-            placeholder="Ready #"
-            aria-label="Mark ready by order number"
-            aria-describedby="ready-hint"
-            inputMode="numeric"
-            autoComplete="off"
-          />
-          {/* Beside the box on wide screens; under it while focused on narrow ones. */}
-          <span className="ready-hint" id="ready-hint">
-            <span>← Type 3 digits + Enter</span>
-            <span>A112 → 112 = Ready</span>
-          </span>
-        </form>
-        {figures && (
-          <span className="queue-estimate" role="status">
-            <span>
-              New order: about {figures.new_order_low_min}–{figures.new_order_high_min} min
+            <input
+              ref={numberBox}
+              value={readyNo}
+              onChange={(e) => setReadyNo(e.target.value.slice(0, 4))}
+              placeholder="Ready #"
+              aria-label="Mark ready by order number"
+              aria-describedby="ready-hint"
+              inputMode="numeric"
+              autoComplete="off"
+            />
+            {/* Always beside the box, never a pop-up; two lines on laptops, one short line on tablets and phones. */}
+            <span className="ready-hint" id="ready-hint">
+              <span className="hint-long">
+                <span>← ① Tap or click this box</span>
+                <span>② Type 3 digits + Enter (A112 → 112)</span>
+              </span>
+              <span className="hint-short">① Tap ② 112 + Enter</span>
             </span>
-            {figures.average_wait_min != null && <span>Avg wait today: {figures.average_wait_min} min</span>}
-          </span>
-        )}
+          </form>
+          {figures && !(estimateInSideBar && sideSlot) && <QueueEstimate figures={figures} />}
+        </div>
       </div>
+      {figures && estimateInSideBar && sideSlot && createPortal(<QueueEstimate figures={figures} />, sideSlot)}
+      {choice && (
+        <section className="ready-choice" role="group" aria-label="Which order is Ready?">
+          <p>
+            <strong>
+              {choice.length} orders end in {choice[0].order_number.slice(-3)}.
+            </strong>{" "}
+            Which one is Ready? Tap it, or type its number + Enter.
+          </p>
+          <div className="ready-choice-buttons">
+            {choice.map((order, index) => (
+              <button key={order.id} className="primary" onClick={() => void markReady(order)}>
+                {index + 1} · {order.order_number} {order.first_name || ""} · {timestamp(order.created_at)}
+              </button>
+            ))}
+            <button className="secondary" onClick={() => setChoice(null)}>
+              None of these
+            </button>
+          </div>
+        </section>
+      )}
       {history_tab && canViewCompleted && (
         <div className="filter-row">
           <label>

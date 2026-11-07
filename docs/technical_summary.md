@@ -74,7 +74,7 @@ Christmas Together 2026 · 26–29 Nov · Hall F, Marina Bay Sands · Live: http
 | 1 Order screen | Tap drink → Hot/Iced → Dairy/Oat → **Add to order** → first name → **Place order**. Number A001…, total to key into the POS, QR for the guest |
 | 2 Barista queue | Oldest first. **One tap Making, one tap Ready**, or type the 3 digits on the number pad + **Enter** (A112 → 112). Tabs: Active, Received, Making (hidden when Making is skipped), Ready, Late, Completed, Cancelled |
 | 3 Guest status page | Scan QR → order number, drinks, progress steps, orders ahead, **wait estimate**; chime, flash and title change when Ready |
-| 4 Ready board | Second screen / TV: **12 Ready + 12 In progress**, number beside name, pages every 8 s; Ready on the left or right |
+| 4 Ready board | Second screen / TV: **12 Ready + 12 In progress** (Received orders when Making is skipped), number beside name, pages every 8 s; Ready on the left or right |
 | 5 Menu controls | Change items and prices, **sold out** for a drink or oat milk; every device updates live |
 | 6 Daily sales report | Cups and totals **per day or all event days**, by drink and option; views **Sold / Cancelled / Discarded / All orders**; refund tally and **final sales** to match the POS; **4 CSV files** |
 
@@ -112,8 +112,9 @@ Christmas Together 2026 · 26–29 Nov · Hall F, Marina Bay Sands · Live: http
 
 ## Tested
 
-Latest backend checks: 98 tests passed on both SQLite and PostgreSQL (7 November).
+Latest backend checks: 99 tests passed on both SQLite and PostgreSQL (7 November).
 
-- All 23 browser tests passed (7 Nov), including Wi-Fi drop and recovery and phone screens
+- All 25 browser tests passed (7 Nov), including Wi-Fi drop and recovery and phone screens
 - Load test: 300 guest phones for 10 minutes on a 1-CPU server, no errors
+- **Team-tested on real devices:** iPhone 13 / 13 Pro Max, Android (Redmi Note 14), iPad, laptop, MacBook; feedback fixed, re-tested
 - Every acceptance test is logged with its evidence
