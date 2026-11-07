@@ -31,7 +31,7 @@ This README is the step-by-step guide to install, deploy and run the system. Wha
 | Station | Device | Screen |
 | --- | --- | --- |
 | Order | One tablet or laptop | **New order** |
-| Queue | A laptop, plus a **second screen** facing the guests | Laptop: **Queue**. Second screen: the **Ready board** (`/board`) |
+| Queue | A laptop with a small **USB number pad** (most laptops have none), plus a **second screen** facing the guests | Laptop: **Queue**. Second screen: the **Ready board** (`/board`) |
 | Pickup | A tablet, laptop or phone with a camera | **Pickup** (the camera reads the guest's QR; no QR reader needed) |
 | Guests | Their own phone | The page they open by scanning the QR |
 
@@ -117,9 +117,9 @@ docker compose -f docker-compose.prod.yml up --build -d
 1. Connect every device to the internet (hall Wi-Fi or a phone hotspot) and open the **HTTPS** link.
 2. **Sign in once on each device while online.** Each device gets its own order letter (A, B…). Keep using the same browser on that device, and don't clear its data.
 3. **Order station:** open **New order**.
-4. **Queue station:** open **Queue** on the laptop. On the second screen, open `https://<DOMAIN>/board`, press **F11** for full screen, and leave it running. To mark an order ready by number, type its 3 digits (e.g. `012`) and press Enter.
+4. **Queue station:** open **Queue** on the laptop. On the second screen, open `https://<DOMAIN>/board`, press **F11** for full screen, and leave it running. To mark an order ready by number, type its 3 digits on the number pad (A112 → `112`) and press Enter.
 5. **Pickup station:** open **Pickup**, tap **Start camera** and allow the camera. **Scan from photo** is the backup if the live camera can't be used.
-6. **Booth Lead:** in **Settings**, check the booth settings (Making step, Collect on scan, reminders, Cancel button, waiting-time estimate, ready board side, charity counter).
+6. **Booth Lead / Admin:** in **Settings**, check the booth settings (Making step, Collect on scan, reminders, Cancel button, waiting-time estimate and how it reads) and, as Admin, **Settings → Ready board** (Ready side, charity counter and its position, with a live preview and one Save).
 7. **Test before opening:** place one order and take it through to Collected. Check the guest page, the board and the pickup scan.
 
 If the Wi-Fi drops, keep working: each device saves orders and taps and sends them when the connection returns. The badge on each device shows **Synced** or how many changes are waiting.
@@ -133,7 +133,7 @@ At the end of each event day (or the next morning, before the first order):
 3. Choose the day to close (normally yesterday), then **Review day reset**.
 4. Confirm the devices have synced, then **Close day and clear names**.
 
-What happens: that day's orders leave the queue and the board, and **guests' first names are cleared**. Sales, the daily report and the audit trail stay, without guest names. The next day starts again from order 001. Export that day's CSV from **Daily sales** first if you need it for the POS check.
+What happens: that day's orders leave the queue and the board, and **guests' first names are cleared**. Sales, the daily report and the audit trail stay, without guest names. The next day starts again from order 001. Export that day's CSV from **Daily sales → Export CSV ▾** first if you need it for the POS check (Sales by item, Cancelled orders with the refund tally, Discarded drinks or All orders).
 
 ## 6. Backups
 

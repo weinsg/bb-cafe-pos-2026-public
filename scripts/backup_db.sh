@@ -4,7 +4,7 @@
 #   15 3 * * * bash /home/deploy/beansbeats/scripts/backup_db.sh >> /home/deploy/backups/backup.log 2>&1
 # Copy the newest backup to the laptop (run on the laptop):
 #   scp "deploy@<server>:backups/*.sql.gz" ./bb_backups/
-# Restore into the running database (destructive; see README section 6, Backups):
+# Restore into the running database (destructive; see README "Backups"):
 #   gunzip -c FILE.sql.gz | docker compose -f docker-compose.prod.yml exec -T db psql -U beansbeats -d beansbeats_db
 set -euo pipefail
 cd "$(dirname "$0")/.."

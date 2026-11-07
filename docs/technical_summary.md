@@ -8,7 +8,7 @@ Christmas Together 2026 · 26–29 Nov · Hall F, Marina Bay Sands · Live: http
 
 [[diagram]]
 
-- **Order** on one tablet or laptop · **Queue** on a laptop (number keys) with a **second screen** for the Ready board · **Pickup** on any device with a camera
+- **Order** on one tablet or laptop · **Queue** on a laptop with a **USB number pad** (most laptops have none) for typing order numbers, and a **second screen** for the Ready board · **Pickup** on any device with a camera
 - Guests use **their own phone**: scan the QR, no app, no login
 - One person can run it all on one device; more staff = more devices, kept in sync
 
@@ -72,21 +72,19 @@ Christmas Together 2026 · 26–29 Nov · Hall F, Marina Bay Sands · Live: http
 | Module | What it does |
 | --- | --- |
 | 1 Order screen | Tap drink → Hot/Iced → Dairy/Oat → **Add to order** → first name → **Place order**. Number A001…, total to key into the POS, QR for the guest |
-| 2 Barista queue | Oldest first. **One tap Making, one tap Ready** (or type **012 + Enter**). Tabs: Active, To make, Received, Making, Ready, Late, Completed, Cancelled |
+| 2 Barista queue | Oldest first. **One tap Making, one tap Ready**, or type the 3 digits on the number pad + **Enter** (A112 → 112). Tabs: Active, Received, Making (hidden when Making is skipped), Ready, Late, Completed, Cancelled |
 | 3 Guest status page | Scan QR → order number, drinks, progress steps, orders ahead, **wait estimate**; chime, flash and title change when Ready |
 | 4 Ready board | Second screen / TV: **12 Ready + 12 In progress**, number beside name, pages every 8 s; Ready on the left or right |
 | 5 Menu controls | Change items and prices, **sold out** for a drink or oat milk; every device updates live |
-| 6 Daily sales report | Cups and totals **per day, by drink and option**; **CSV** to match the organiser's POS; cancelled, refunded and discarded counts |
+| 6 Daily sales report | Cups and totals **per day or all event days**, by drink and option; views **Sold / Cancelled / Discarded / All orders**; refund tally and **final sales** to match the POS; **4 CSV files** |
 
-## Extras
+## How a drink flows
 
-- **Pickup scan:** the guest's QR is the pickup ticket; the device camera reads it and marks Collected, with **Undo** for 10 s (or a Hand over tap)
-- **Waiting-time estimate:** "Usually ready in about 7–11 min" from today's real pace; on/off for the board and for phones
-- **Charity counter** panel on the board: cups today or all days, optional sales amount
-- **Late drinks:** orange after 30 min, red after 60, guest warned; **Discard** button
-- **Cancel** with a reason and refund status; **Cancelled** tab; Cancel in the popup and/or on the ticket
-- **Booth settings (Booth Lead):** skip Making, collect on scan, reminder times, board side
-- **Audit trail** (Admin), settings-change notice on other devices, **personal staff logins**
+1. **Order:** barista keys it in; guest pays at the POS and scans the QR
+2. **Queue:** Start making → Mark ready
+3. **Guest phone:** chimes; name appears on the Ready board
+4. **Pickup:** scan the guest's QR → Collected, off the board
+5. **End of day:** Booth Lead checks every device is Synced → **Reset day**: names cleared, report kept
 
 [[column]]
 
@@ -102,18 +100,20 @@ Christmas Together 2026 · 26–29 Nov · Hall F, Marina Bay Sands · Live: http
 | Any crew size | One device or many, in sync |
 | Safe by default | Server-checked roles, rate-limited logins, HTTPS, daily backups |
 
-## How a drink flows
+## Extras
 
-1. **Order:** barista keys it in; guest pays at the POS and scans the QR
-2. **Queue:** Start making → Mark ready
-3. **Guest phone:** chimes; name appears on the Ready board
-4. **Pickup:** scan the guest's QR → Collected, off the board
-5. **End of day:** Booth Lead checks every device is Synced → **Reset day**: names cleared, report kept
+- **Pickup scan:** the guest's QR is the pickup ticket; the device camera reads it and marks Collected, with **Undo** for 10 s (or a Hand over tap)
+- **Waiting-time estimate:** from today's real pace; shown as a range, upper bound, average or average to upper; on/off for the board and for phones
+- **Charity counter** on the board: in the **top bar** (default) or a **left / right side panel**; cups today or all days, optional sales amount
+- **Late drinks:** orange after 30 min, red after 60, guest warned; **Discard** button
+- **Cancel** with a reason and refund status; **Cancelled** tab; Cancel in the popup and/or on the ticket
+- **Booth settings:** skip Making, collect on scan, reminder times, where Cancel shows, estimate on/off; **Ready board** (Admin): one section with a live preview and one Save
+- **Audit trail** (Admin), settings-change notice on other devices, **personal staff logins**
 
 ## Tested
 
-Latest backend checks: 92 tests passed on both SQLite and PostgreSQL (7 November).
+Latest backend checks: 98 tests passed on both SQLite and PostgreSQL (7 November).
 
-- All 20 browser tests passed (7 Nov), including Wi-Fi drop and recovery
+- All 23 browser tests passed (7 Nov), including Wi-Fi drop and recovery and phone screens
 - Load test: 300 guest phones for 10 minutes on a 1-CPU server, no errors
 - Every acceptance test is logged with its evidence

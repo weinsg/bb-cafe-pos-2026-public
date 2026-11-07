@@ -494,3 +494,12 @@ export function startSync() {
     document.removeEventListener("visibilitychange", visible);
   };
 }
+
+// How the estimate reads on the guest's phone and the board (staff screens keep the range).
+export function estimateText(low, high, display = "range") {
+  const average = Math.round((low + high) / 2);
+  if (display === "upper") return `up to ${high} min`;
+  if (display === "average") return `about ${average} min`;
+  if (display === "average_upper") return average >= high ? `about ${high} min` : `about ${average}–${high} min`;
+  return `about ${low}–${high} min`;
+}

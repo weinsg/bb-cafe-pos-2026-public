@@ -8,15 +8,15 @@ It replaces shouting names and paper tickets with a Luckin-style flow:
 
 - A barista takes the order on a **tablet or laptop**: drink, hot or iced, dairy or oat, and the guest's **first name**. Each order gets a number such as A012.
 - The guest **scans a QR code with their own phone**. No app, no sign-up. They see the drink's progress, how many orders are ahead and a **waiting-time estimate**, and their phone **chimes when it's ready**.
-- Baristas work a **live queue**: one tap for Making, one tap for Ready, or type the 3-digit number and press Enter.
+- Baristas work a **live queue**: one tap for Making, one tap for Ready, or type the 3-digit number on a number pad and press Enter (a laptop needs a small USB number pad).
 - A **ready board** on a second screen shows the numbers and names ready to collect.
 - At pickup, staff **scan the guest's QR with the device camera**; no QR reader or printer needed.
-- The Booth Lead can **change the menu, prices and sold-out items** live and export a **daily sales CSV** that matches the organiser's POS.
+- The Booth Lead can **change the menu, prices and sold-out items** live, and the **Daily sales** report tallies sales, cancels and refunds for a day or all event days, with four CSV exports and a final total that matches the organiser's POS.
 
 All six modules in the brief are built and live at https://165-22-242-253.sslip.io. Extras:
 
 - waiting-time estimate;
-- charity counter on the board;
+- charity counter on the board (top bar or a left/right side panel);
 - reminders for uncollected drinks (orange, then red, then Discard);
 - cancel with refund tracking;
 - live booth settings;
@@ -36,9 +36,9 @@ All six modules in the brief are built and live at https://165-22-242-253.sslip.
 ## Results
 
 - **All 6 required modules live**, plus 8 extras.
-- **92 automated backend tests** pass on both SQLite and PostgreSQL.
-- **20 automated browser tests** pass, covering the full order flow, a Wi-Fi drop and recovery, pickup scanning, cancel and the ready board.
-- **197 written acceptance tests:** 155 fully passed; 13 passed in testing with only a real-device check left; 26 waiting on real phones, tablets or the hall itself; 3 still open (two need a working connection between booth devices without internet, and one is the 300-phone test on the live server).
+- **98 automated backend tests** pass on both SQLite and PostgreSQL.
+- **23 automated browser tests** pass, covering the full order flow, a Wi-Fi drop and recovery, pickup scanning, cancel, the ready board, the sales report and phone screens.
+- **208 written acceptance tests:** 166 fully passed; 13 passed in testing with only a real-device check left; 26 waiting on real phones, tablets or the hall itself; 3 still open (two need a working connection between booth devices without internet, and one is the 300-phone test on the live server).
 - **Load:** 300 guest phones checking for 10 minutes on a 1-CPU test server. 95% of answers came within **10 ms**, with **0 errors**. Before the fix, the old design took **8.4 s** in the same test and **25.6 s** on the live server. Even with live push down on all 300 phones, answers stayed under **0.3 s**.
 - **Speed at the counter:** an order takes a few taps, marking Ready takes 1 tap (or 3 digits + Enter), and the queue shows **10 tickets on one tablet screen** without scrolling.
 - **Matches the POS:** cancels record whether money was refunded, so the daily total lines up with the organiser's POS.

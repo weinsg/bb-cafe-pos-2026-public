@@ -14,7 +14,7 @@ from sqlmodel import Session, select
 from .auth import hash_password
 from .database import SessionDep, create_db_and_tables, engine
 from .board import charity_place, charity_settings, ready_board_position
-from .models import (Counter, EstimateSettings, TicketSettings, MenuItem, MenuItemOptions, MenuVersion, PickupSettings, QueueSettings,
+from .models import (Counter, EstimateSettings, EstimateFormat, TicketSettings, MenuItem, MenuItemOptions, MenuVersion, PickupSettings, QueueSettings,
                      Surcharge, User)
 from .routers import admin, auth, events, menu, orders, reports, sync
 
@@ -131,6 +131,7 @@ def public_config(session: SessionDep):
         # The estimate on the ready board / guest's phone, Settings → Queue steps.
         **{f"estimate_{key}": value for key, value in
            (session.get(EstimateSettings, 1) or EstimateSettings()).model_dump(include={"on_board", "on_guest"}).items()},
+        "estimate_display": (session.get(EstimateFormat, 1) or EstimateFormat()).display,
         # Where Cancel order shows on every tablet.
         "cancel_place": (session.get(TicketSettings, 1) or TicketSettings()).cancel_place,
         # The live server never shows demo usernames or passwords on its sign-in page.

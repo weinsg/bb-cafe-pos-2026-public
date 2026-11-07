@@ -81,18 +81,31 @@ class TestCharityCounter(Booth):
         self.assertEqual(self.counter()["cups"], 1)
 
     def test_where_defaults_to_the_top_line_admin_only_and_audited(self):
-        """Top line by default; Side panel on request; Admin only; audited."""
+        """Top line by default; Left side or Right side on request; Admin only; audited."""
         self.assertEqual(self.client.get("/api/config").json()["charity_place"], "top")
         self.assertEqual(self.counter()["place"], "top")
-        self.assertEqual(self.set_counter("cups", "today", self.lead, place="panel").status_code, 403)
-        self.assertEqual(self.set_counter("cups", "today", place="side").status_code, 422)
-        self.assertEqual(self.set_counter("cups", "today", place="panel").json()["place"], "panel")
-        self.assertEqual(self.counter()["place"], "panel")
-        self.assertEqual(self.client.get("/api/config").json()["charity_place"], "panel")
+        self.assertEqual(self.set_counter("cups", "today", self.lead, place="left").status_code, 403)
+        self.assertEqual(self.set_counter("cups", "today", place="panel").status_code, 422)
+        self.assertEqual(self.set_counter("cups", "today", place="left").json()["place"], "left")
+        self.assertEqual(self.counter()["place"], "left")
+        self.assertEqual(self.client.get("/api/config").json()["charity_place"], "left")
         [row] = self.client.get("/api/admin/setting-changes", headers=self.barista).json()
-        self.assertEqual(row["details"], "Charity counter: cups, today, in a side panel")
+        self.assertEqual(row["details"], "Charity counter: cups, today, in a left side panel")
+        self.assertEqual(self.set_counter("cups", "today", place="right").json()["place"], "right")
         # Saving without a place keeps the current one.
-        self.assertEqual(self.set_counter("cups_amount", "today").json()["place"], "panel")
+        self.assertEqual(self.set_counter("cups_amount", "today").json()["place"], "right")
+
+    def test_a_side_panel_saved_before_left_and_right_stays_away_from_ready(self):
+        """The earlier "panel" value shows on the side away from Ready, as it did before."""
+        from sqlmodel import Session
+        from app.models import CharityPlace
+        from tests.helpers import test_engine
+        with Session(test_engine) as session:
+            session.add(CharityPlace(id=1, place="panel"))
+            session.commit()
+        self.assertEqual(self.counter()["place"], "right")
+        self.client.patch("/api/admin/board-settings", headers=self.admin, json={"ready_board_position": "right"})
+        self.assertEqual(self.counter()["place"], "left")
 
 
 if __name__ == "__main__":

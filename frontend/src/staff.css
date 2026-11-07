@@ -1068,3 +1068,147 @@ dialog:has(.ticket-confirm) {
   color: var(--green);
   font-weight: 600;
 }
+/* Ready # hint: beside the box where the bar has room; under it while focused elsewhere. */
+.queue-tabs .ready-by-number {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ready-hint {
+  display: grid;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: #8a5a00;
+  white-space: nowrap;
+}
+@media (max-width: 1365px) {
+  .ready-hint {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 5;
+    padding: 6px 10px;
+    border: 1px solid #e3c98f;
+    border-radius: 8px;
+    background: #fff8e6;
+    box-shadow: 0 4px 12px #0000001f;
+  }
+  .ready-by-number:focus-within .ready-hint {
+    display: grid;
+  }
+}
+/* Daily sales views and CSV menu. */
+.report-toolbar {
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+.report-segmented {
+  display: flex;
+  gap: 4px;
+}
+.report-segmented button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffef9;
+  font-size: 15px;
+  font-weight: 600;
+}
+.report-segmented button.active {
+  background: var(--green);
+  color: #fff;
+}
+.export-menu {
+  position: relative;
+}
+.export-options {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 10;
+  display: grid;
+  min-width: 240px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px #0000002a;
+}
+.export-options button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+}
+.export-options button:hover {
+  background: #eef3e8;
+}
+.export-options small {
+  color: var(--muted);
+  font-weight: 500;
+}
+.tile-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline dotted;
+  cursor: pointer;
+}
+.money-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 12px 16px 0;
+}
+.cancel-tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 0;
+  padding: 12px 16px;
+}
+.cancel-tally dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.cancel-tally dd {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+.cancel-tally .tally-final dd {
+  color: var(--green);
+}
+/* Phones and small tablets: the one-row Queue bar scrolls sideways inside itself,
+   so the page never becomes wider than the screen (Safari would zoom the whole page out). */
+@media (max-width: 1099px) {
+  .app-shell .queue-tabs {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .app-shell .queue-tabs::-webkit-scrollbar {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .ready-hint,
+  .ready-by-number:focus-within .ready-hint {
+    display: none;
+  }
+}

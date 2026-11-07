@@ -11,7 +11,10 @@ from sqlmodel import Session, SQLModel, create_engine
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///beansbeats.db")
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+# PostgreSQL: up to 40 connections;
+# each is checked before reuse, so a dropped connection is replaced instead of failing a request.
+pool = {} if DATABASE_URL.startswith("sqlite") else {"pool_size": 20, "max_overflow": 20, "pool_timeout": 15, "pool_pre_ping": True}
+engine = create_engine(DATABASE_URL, connect_args=connect_args, **pool)
 
 
 def create_db_and_tables() -> None:

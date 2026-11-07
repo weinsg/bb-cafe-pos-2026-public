@@ -105,7 +105,6 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
   const late = (o) => o.status === "ready" && reminders && waited(o) >= warnMinutes;
   const groups = {
     all: [...active.filter((o) => !late(o)), ...active.filter(late)],
-    to_make: active.filter((o) => o.status === "received" || o.status === "making"),
     received: active.filter((o) => o.status === "received"),
     making: active.filter((o) => o.status === "making"),
     ready: active.filter((o) => o.status === "ready" && !late(o)),
@@ -215,12 +214,16 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
       setBusy(new Set());
     }
   }
-  // To make (not yet ready) and Late (Ready 30+ min) tabs; Cancelled after Completed.
+  // Late (Ready 30+ min) tab; Cancelled after Completed; no To make tab. With the Making step
+  // Off, the Making tab hides unless orders are still in Making.
+  const showMaking = useMaking || groups.making.length > 0;
+  useEffect(() => {
+    if (!showMaking && filter === "making") setFilter("all");
+  }, [showMaking, filter]);
   const tabs = [
     ["all", "Active"],
-    ["to_make", "To make"],
     ["received", "Received"],
-    ["making", "Making"],
+    ...(showMaking ? [["making", "Making"]] : []),
     ["ready", "Ready"],
     ...(reminders ? [["late", `Late ${warnMinutes}+ min`]] : []),
     ...(canViewCompleted ? [["collected", "Completed"], ["cancelled", "Cancelled"]] : []),
@@ -259,10 +262,16 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
             value={readyNo}
             onChange={(e) => setReadyNo(e.target.value.slice(0, 4))}
             placeholder="Ready #"
-            title="Type an order's 3 digits (e.g. 012) and Enter: it becomes Ready to collect"
             aria-label="Mark ready by order number"
+            aria-describedby="ready-hint"
+            inputMode="numeric"
             autoComplete="off"
           />
+          {/* Beside the box on wide screens; under it while focused on narrow ones. */}
+          <span className="ready-hint" id="ready-hint">
+            <span>← Type 3 digits + Enter</span>
+            <span>A112 → 112 = Ready</span>
+          </span>
         </form>
         {figures && (
           <span className="queue-estimate" role="status">

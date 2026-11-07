@@ -16,13 +16,17 @@ def charity_settings(session: Session) -> CharityCounter:
 
 
 def charity_place(session: Session) -> str:
-    """Where the counter goes: "top" (top line, default) or "panel" (side panel)."""
+    """"top" (top line, default), "left" or "right" (a side panel on that side)."""
     row = session.get(CharityPlace, 1)
-    return "panel" if row and row.place == "panel" else "top"
+    if not row or row.place not in ("left", "right", "panel"):
+        return "top"
+    if row.place == "panel":  # saved before Left/Right existed: the side away from Ready, as it was shown then
+        return "left" if ready_board_position(session) == "right" else "right"
+    return row.place
 
 
 def charity_counter(session: Session, today: str) -> dict | None:
-    """Cups (and sales) on the board, counted by the daily sales rules."""
+    """Cups (and sales) on the board, counted by the daily sales rules (A15)."""
     settings = charity_settings(session)
     if settings.show == "off":
         return None

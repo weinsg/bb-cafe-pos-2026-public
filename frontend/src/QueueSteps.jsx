@@ -116,15 +116,24 @@ function Switch({ title, value, onChange, onText, offText }) {
 }
 
 // The estimate on the ready board and on the guest's phone; staff screens always show it.
+// How the estimate reads on the guest's phone and the board (staff screens keep the range).
+const DISPLAYS = [
+  ["range", "Range", "about 7–11 min"],
+  ["upper", "Upper bound only", "up to 11 min"],
+  ["average", "Average", "about 9 min"],
+  ["average_upper", "Average to upper bound", "about 9–11 min"],
+];
+
 function EstimateSettingForm() {
   const config = useLiveQuery(() => db.settings.get("config"));
   const saved = {
     on_board: config?.estimate_on_board !== false,
     on_guest: config?.estimate_on_guest !== false,
+    display: config?.estimate_display || "range",
   };
   const [draft, setDraft] = useState({});
   const value = { ...saved, ...draft };
-  const changed = value.on_board !== saved.on_board || value.on_guest !== saved.on_guest;
+  const changed = ["on_board", "on_guest", "display"].some((key) => value[key] !== saved[key]);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -166,7 +175,32 @@ function EstimateSettingForm() {
           onText="The guest's page shows “Usually ready in about X–Y min” and how many orders are ahead"
           offText="No estimate on the guest's page"
         />
-        <p className="footnote">Staff screens (the Queue bar and the order popups) always show the estimate.</p>
+        <div className="setting-row">
+          <strong>Shows as</strong>
+          <div className="segmented" role="group" aria-label="Estimate shows as">
+            {DISPLAYS.map(([key, text]) => (
+              <button
+                type="button"
+                key={key}
+                aria-pressed={value.display === key}
+                className={value.display === key ? "active" : ""}
+                onClick={() => set({ display: key })}
+              >
+                {text}
+              </button>
+            ))}
+            <ul className="choice-notes display-notes">
+              {DISPLAYS.map(([key, text, example]) => (
+                <li key={key} className={value.display === key ? "current" : ""}>
+                  <strong>{text}:</strong> “Usually ready in {example}”
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <p className="footnote">
+          On the guest's phone and the ready board. Staff screens (the Queue bar and the order popups) always show the range.
+        </p>
         <button className="primary" disabled={!changed}>
           {saving ? "Saving…" : "Save waiting-time estimate"}
         </button>

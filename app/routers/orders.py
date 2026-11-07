@@ -16,7 +16,7 @@ from ..auth import RequireBarista, RequireBoothLead, RequireCompletedAccess
 from .. import database
 from ..database import SessionDep
 from ..models import (AuditLog, MenuItem, MenuItemOptions, Order, OrderItem, OrderRevision, ClosedDay, PickupSettings,
-                      EstimateSettings, OrderClosure)
+                      EstimateSettings, EstimateFormat, OrderClosure)
 from ..schemas import (
     CancelledOrderResponse,
     GuestDrink,
@@ -255,7 +255,7 @@ def _board_estimate(session, day: str) -> dict | None:
     if not (session.get(EstimateSettings, 1) or EstimateSettings()).on_board:
         return None
     low, high = estimate.minutes(estimate.waiting_count(session, day), estimate.day_stats(session, day))
-    return {"low_min": low, "high_min": high}
+    return {"low_min": low, "high_min": high, "display": (session.get(EstimateFormat, 1) or EstimateFormat()).display}
 
 
 @router.get("/ready-board")
@@ -460,6 +460,7 @@ def _shared_figures(session, event_day: str, peek: bool = False) -> dict | None:
         "closed_days": _closed_days(session),
         "stats": estimate.day_stats(session, event_day),
         "show_estimate": (session.get(EstimateSettings, 1) or EstimateSettings()).on_guest,
+        "estimate_display": (session.get(EstimateFormat, 1) or EstimateFormat()).display,
         "waiting": [(order_id, estimate.utc(created)) for order_id, created in waiting],
     }
     if len(_shared_cache) > 8:
@@ -534,6 +535,7 @@ async def get_guest_status(order_id: str) -> GuestStatusResponse:
         closed_days=shared["closed_days"],
         event_tag=order["tag"],
         estimate_low_min=low,
+        estimate_display=shared["estimate_display"],
         estimate_high_min=high,
         orders_ahead=ahead,
         average_wait_min=stats.average_wait_min if shown else None,

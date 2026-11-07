@@ -124,7 +124,7 @@ class QueueSettings(SQLModel, table=True):
     use_making_step: bool = True
 
 
-# Where the counter goes: "top" (top line, default) or "panel" (1/3 side panel).
+# Where the counter goes: "top" (top line, default), "left" or "right" (a 1/3 side panel).
 # Own table, so existing volumes need no ALTER.
 class CharityPlace(SQLModel, table=True):
     __tablename__ = "charity_place"
@@ -139,6 +139,14 @@ class EstimateSettings(SQLModel, table=True):
     id: int = Field(default=1, primary_key=True)
     on_board: bool = True
     on_guest: bool = True
+
+
+# How the estimate shows on the guest's phone and the board: "range" (default), "upper",
+# "average" or "average_upper". Own table, so existing volumes need no ALTER.
+class EstimateFormat(SQLModel, table=True):
+    __tablename__ = "estimate_format"
+    id: int = Field(default=1, primary_key=True)
+    display: str = "range"
 
 
 # Where Cancel order shows: "popup" (QR popups), "below" (under the main button), "both".

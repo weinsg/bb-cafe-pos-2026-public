@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Brand, Icon, Message } from "./ui";
 import { useResource } from "./useResource";
+import { estimateText } from "./data";
 
 // Long names shrink until they fit beside the number; they are never cut off.
 function FitName({ name }) {
@@ -108,9 +109,10 @@ export function ReadyBoard() {
   const amount =
     tally?.amount_cents != null &&
     (tally.amount_cents / 100).toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  // Top line (default; the counter in the top bar, Ready and In progress half each) or
-  // Side panel (the counter takes 1/3 of the board, on the side away from Ready).
-  const topLine = tally && tally.place !== "panel" && (
+  // Top line (default; the original board, counter in the top bar), or a side panel
+  // taking 1/3 of the board on the left or right, whichever side Ready is on.
+  const side = tally && (tally.place === "left" || tally.place === "right") ? tally.place : null;
+  const topLine = tally && !side && (
     <p className="board-counter-top" aria-label="Charity counter">
       <strong>{tally.cups.toLocaleString("en-SG")}</strong> {tally.cups === 1 ? "cup" : "cups"}{" "}
       {tally.period === "all" ? "so far" : "today"}
@@ -123,7 +125,7 @@ export function ReadyBoard() {
       <span>All profits go to Singapore Red Cross Young Hearts</span>
     </p>
   );
-  const counter = tally && tally.place === "panel" && (
+  const counter = side && (
     <aside className="board-counter" aria-label="Charity counter" key="counter">
       <p className="counter-kicker">For charity</p>
       <strong className="counter-cups">{tally.cups.toLocaleString("en-SG")}</strong>
@@ -147,9 +149,9 @@ export function ReadyBoard() {
         {board?.estimate && (
           // The Queue's new-order estimate; Settings → Queue steps can switch it off.
           <p className="board-estimate">
-            Order now: ready in about{" "}
+            Order now: ready in{" "}
             <strong>
-              {board.estimate.low_min}–{board.estimate.high_min} min
+              {estimateText(board.estimate.low_min, board.estimate.high_min, board.estimate.display)}
             </strong>
           </p>
         )}
@@ -159,9 +161,9 @@ export function ReadyBoard() {
         </span>
       </header>
       <div className={`board-columns ${counter ? "with-counter" : ""}`}>
-        {position === "right" && counter}
+        {side === "left" && counter}
         {position === "right" ? [...lanes].reverse() : lanes}
-        {position === "left" && counter}
+        {side === "right" && counter}
       </div>
       {error && !board && (
         <p className="board-error" role="status">
@@ -354,7 +356,7 @@ export function GuestPage({ id }) {
                 <strong>
                   Usually ready in{" "}
                   <span className="nowrap">
-                    about {order.estimate_low_min}–{order.estimate_high_min} min
+                    {estimateText(order.estimate_low_min, order.estimate_high_min, order.estimate_display)}
                   </span>
                 </strong>
                 <span>

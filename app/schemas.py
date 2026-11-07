@@ -41,7 +41,7 @@ class CharityCounterUpdate(BaseModel):
     """What the ready board's charity counter shows, and over which days."""
     show: Literal["off", "cups", "cups_amount"]
     period: Literal["today", "all"]
-    place: Optional[Literal["top", "panel"]] = None  # top line (default) or side panel
+    place: Optional[Literal["top", "left", "right"]] = None  # top line (default), left or right side panel
 
 
 class QueueSettingsUpdate(BaseModel):
@@ -51,6 +51,7 @@ class QueueSettingsUpdate(BaseModel):
 class EstimateSettingsUpdate(BaseModel):
     on_board: Optional[bool] = None
     on_guest: Optional[bool] = None
+    display: Optional[Literal["range", "upper", "average", "average_upper"]] = None
 
 
 class CancelPlaceUpdate(BaseModel):
@@ -184,6 +185,7 @@ class GuestStatusResponse(BaseModel):
     # Waiting-time estimate while Received or Making (None otherwise), average wait today.
     estimate_low_min: Optional[int] = None
     estimate_high_min: Optional[int] = None
+    estimate_display: str = "range"  # range / upper / average / average_upper
     orders_ahead: Optional[int] = None
     average_wait_min: Optional[int] = None
 
@@ -227,6 +229,33 @@ class DailyReportResponse(BaseModel):
     discarded_orders: int = 0
     drinks: List[DailyDrinkTotal] = []  # One row per drink
     items: List[DailySalesItem]  # One row per drink + options + unit price (CSV rows)
+
+
+class ReportOrder(BaseModel):
+    """One order in the report's Cancelled / Discarded / All orders views (no guest name)."""
+    event_day: str
+    order_number: str
+    time: str
+    status: str
+    drinks: str
+    lines: List[dict] = []
+    amount_cents: int
+    counts_in_sales: bool
+    reason: Optional[str] = None
+    money: Optional[str] = None
+    by: Optional[str] = None
+    closed_time: Optional[str] = None
+    waited_min: Optional[int] = None
+
+
+class ReportOrdersResponse(BaseModel):
+    scope_days: List[str]
+    kind: str
+    orders: List[ReportOrder]
+    refunded_cents: int = 0
+    not_paid_cents: int = 0
+    no_refund_cents: int = 0
+    final_sales_cents: int = 0
 
 
 class ResetDayRequest(BaseModel):

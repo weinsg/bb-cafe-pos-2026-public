@@ -114,8 +114,8 @@ class TestEstimateSetting(Booth):
         config = self.client.get("/api/config").json()
         self.assertEqual((config["estimate_on_board"], config["estimate_on_guest"]), (True, True))
         self.assertEqual(self.switch(self.barista, on_guest=False).status_code, 403)
-        self.assertEqual(self.switch(self.lead, on_guest=False).json(), {"on_board": True, "on_guest": False})
-        self.assertEqual(self.switch(self.admin, on_board=False).json(), {"on_board": False, "on_guest": False})
+        self.assertEqual(self.switch(self.lead, on_guest=False).json(), {"on_board": True, "on_guest": False, "display": "range"})
+        self.assertEqual(self.switch(self.admin, on_board=False).json(), {"on_board": False, "on_guest": False, "display": "range"})
         details = [r["details"] for r in self.client.get("/api/admin/setting-changes", headers=self.barista).json()]
         self.assertEqual(sorted(details), ["Waiting-time estimate on the guest's phone switched off",
                                            "Waiting-time estimate on the ready board switched off"])
@@ -127,7 +127,7 @@ class TestEstimateSetting(Booth):
         mine = self.order()
         url = f"/api/orders/{mine['id']}/status"
         self.assertEqual(self.client.get(url).json()["orders_ahead"], 1)
-        self.assertEqual(self.client.get("/api/orders/ready-board").json()["estimate"], {"low_min": 7, "high_min": 11})
+        self.assertEqual(self.client.get("/api/orders/ready-board").json()["estimate"], {"low_min": 7, "high_min": 11, "display": "range"})
         self.switch(self.lead, on_guest=False)
         page = self.client.get(url).json()
         self.assertEqual([page[k] for k in ("estimate_low_min", "estimate_high_min", "orders_ahead", "average_wait_min")],
@@ -139,3 +139,21 @@ class TestEstimateSetting(Booth):
         self.assertEqual(self.client.get("/api/orders/wait-estimate", headers=self.barista).json()["waiting"], 2)
         self.switch(self.lead, on_guest=True, on_board=True)
         self.assertEqual(self.client.get(url).json()["orders_ahead"], 1)
+
+    def test_display_format_reaches_the_guest_page_and_the_board(self):
+        """Range by default; upper / average / average_upper on request; audited."""
+        self.order()
+        mine = self.order()
+        url = f"/api/orders/{mine['id']}/status"
+        self.assertEqual(self.client.get("/api/config").json()["estimate_display"], "range")
+        self.assertEqual(self.client.get(url).json()["estimate_display"], "range")
+        self.assertEqual(self.switch(self.barista, display="upper").status_code, 403)
+        self.assertEqual(self.switch(self.lead, display="mean").status_code, 422)
+        self.assertEqual(self.switch(self.lead, display="upper").json()["display"], "upper")
+        self.assertEqual(self.client.get(url).json()["estimate_display"], "upper")
+        self.assertEqual(self.client.get("/api/orders/ready-board").json()["estimate"]["display"], "upper")
+        self.switch(self.admin, display="average_upper")
+        self.assertEqual(self.client.get("/api/config").json()["estimate_display"], "average_upper")
+        details = [r["details"] for r in self.client.get("/api/admin/setting-changes", headers=self.barista).json()]
+        self.assertIn("Waiting-time estimate shows as the upper bound (up to 11 min)", details)
+        self.assertIn("Waiting-time estimate shows as average to upper bound (about 9–11 min)", details)

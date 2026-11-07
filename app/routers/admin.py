@@ -9,7 +9,7 @@ from sqlmodel import col, select
 from ..auth import RequireBarista, RequireBoothLead, RequireAdmin, can_cancel, can_view_completed
 from ..database import SessionDep
 from ..models import (AuditLog, Order, ClosedDay, SyncReceipt, CompletedAccess, CancelAccess, User, BoardSettings,
-                      QueueSettings, PickupSettings, CharityCounter, CharityPlace, EstimateSettings, TicketSettings)
+                      QueueSettings, PickupSettings, CharityCounter, CharityPlace, EstimateSettings, EstimateFormat, TicketSettings)
 from .sync import lock_counter
 from ..schemas import (AuditLogResponse, ResetDayRequest, CompletedAccessUpdate, UserResponse, BoardSettingsUpdate,
                        QueueSettingsUpdate, PickupSettingsUpdate, CharityCounterUpdate,
@@ -63,7 +63,8 @@ async def update_board_settings(request: BoardSettingsUpdate, session: SessionDe
 
 
 COUNTER_LABELS = {"off": "off", "cups": "cups", "cups_amount": "cups and amount",
-                  "today": "today", "all": "all event days", "top": "in the top line", "panel": "in a side panel"}
+                  "today": "today", "all": "all event days", "top": "in the top line",
+                  "left": "in a left side panel", "right": "in a right side panel", "panel": "in a side panel"}
 
 
 @router.patch("/charity-counter")
@@ -129,6 +130,11 @@ async def update_estimate_settings(request: EstimateSettingsUpdate, session: Ses
         if value is not None and value != getattr(settings, key):
             setattr(settings, key, value)
             changes.append(f"Waiting-time estimate {place} switched {'on' if value else 'off'}")
+    shown = session.get(EstimateFormat, 1) or EstimateFormat()
+    if request.display and request.display != shown.display:
+        shown.display = request.display
+        changes.append(f"Waiting-time estimate shows as {DISPLAYS[shown.display]}")
+    session.add(shown)
     session.add(settings)
     if changes:
         session.add(AuditLog(id=_change_id(x_change_id), staff_username=user.username, action="ESTIMATE_CHANGED",
@@ -137,7 +143,11 @@ async def update_estimate_settings(request: EstimateSettingsUpdate, session: Ses
     if changes:
         # Guest pages refetch for this event (spread over 3 s); tablets and boards refetch on any event.
         await _announce("guest_settings_changed")
-    return {"on_board": settings.on_board, "on_guest": settings.on_guest}
+    return {"on_board": settings.on_board, "on_guest": settings.on_guest, "display": shown.display}
+
+
+DISPLAYS = {"range": "a range (about 7–11 min)", "upper": "the upper bound (up to 11 min)",
+            "average": "the average (about 9 min)", "average_upper": "average to upper bound (about 9–11 min)"}
 
 
 CANCEL_PLACES = {"popup": "in the QR popup", "below": "below the main button", "both": "in the QR popup and below the main button"}

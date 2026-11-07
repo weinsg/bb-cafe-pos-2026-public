@@ -344,12 +344,48 @@ export function MenuScreen() {
     </>
   );
 }
+// Views and exports for the owner. No guest names anywhere; staff logins are shown.
+const REPORT_VIEWS = [
+  ["sold", "Sold"],
+  ["cancelled", "Cancelled"],
+  ["discarded", "Discarded"],
+  ["all", "All orders"],
+];
+const MONEY_FILTERS = [
+  ["", "All"],
+  ["Refunded on POS", "Refunded on POS"],
+  ["Not paid yet", "Not paid yet"],
+  ["Paid, no refund", "Paid, no refund"],
+];
+const CSV_KINDS = [
+  ["sales", "Sales by item", "sales"],
+  ["cancelled", "Cancelled orders", "cancelled"],
+  ["discarded", "Discarded drinks", "discarded"],
+  ["all", "All orders", "all_orders"],
+];
+const STATUS_TEXT = {
+  received: "Received",
+  making: "Making",
+  ready: "Ready",
+  collected: "Collected",
+  cancelled: "Cancelled",
+  discarded: "Discarded",
+};
+
 export function ReportScreen() {
   const [day, setDay] = useState(eventDay);
+  const [scope, setScope] = useState("day");
+  const [view, setView] = useState("sold");
+  const [moneyFilter, setMoneyFilter] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [error, setError] = useState("");
   const [exporting, setExporting] = useState(false);
-  const resource = useResource(`/reports/daily?event_day=${day}`);
-  async function download() {
+  const scopeQuery = scope === "all" ? "&scope=all" : "";
+  const resource = useResource(`/reports/daily?event_day=${day}${scopeQuery}`);
+  const orders = useResource(view !== "sold" ? `/reports/orders?kind=${view}&event_day=${day}${scopeQuery}` : null);
+  const label = scope === "all" ? "all event days" : day;
+  async function download(kind = "sales") {
+    setMenuOpen(false);
     setExporting(true);
     setError("");
     try {
@@ -358,13 +394,14 @@ export function ReportScreen() {
         throw new Error(
           "Sync saved changes first so the export includes every order.",
         );
-      const blob = await api(`/reports/daily/csv?event_day=${day}`, {
+      const blob = await api(`/reports/csv?kind=${kind}&event_day=${day}${scopeQuery}`, {
         blob: true,
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `beansbeats_sales_${day}.csv`;
+      const file = CSV_KINDS.find(([k]) => k === kind)[2];
+      link.download = `beansbeats_${file}_${scope === "all" ? "all-days" : day}.csv`;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (err) {
@@ -374,21 +411,50 @@ export function ReportScreen() {
     }
   }
   const report = resource.data;
+  const list = Array.isArray(orders.data?.orders)
+    ? orders.data.orders.filter((o) => view !== "cancelled" || !moneyFilter || o.money === moneyFilter)
+    : [];
+  const segmented = (options, value, onPick, name) => (
+    <div className="segmented report-segmented" role="group" aria-label={name}>
+      {options.map(([key, text]) => (
+        <button
+          type="button"
+          key={key}
+          aria-pressed={value === key}
+          className={value === key ? "active" : ""}
+          onClick={() => onPick(key)}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
+  );
   // ForkStack-style day close: one toolbar row, one summary strip, then the tables.
   return (
     <>
-      <div className="toolbar">
+      <div className="toolbar report-toolbar">
         <label>
           Event day
           <input
             type="date"
             value={day}
             required
+            disabled={scope === "all"}
             onChange={(e) => {
               if (e.target.value) setDay(e.target.value);
             }}
           />
         </label>
+        {segmented(
+          [
+            ["day", "This day"],
+            ["all", "All event days"],
+          ],
+          scope,
+          setScope,
+          "Report days",
+        )}
+        {segmented(REPORT_VIEWS, view, setView, "Show")}
         {!resource.connected && (
           <span className="muted">
             {report
@@ -396,14 +462,28 @@ export function ReportScreen() {
               : "Connecting to load the report…"}
           </span>
         )}
-        <button
-          className="primary toolbar-end"
-          disabled={exporting || !resource.connected}
-          onClick={download}
-        >
-          <Icon name="report" />
-          {exporting ? "Exporting…" : "Export CSV"}
-        </button>
+        <div className="export-menu toolbar-end">
+          <button
+            className="primary"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            disabled={exporting || !resource.connected}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <Icon name="report" />
+            {exporting ? "Exporting…" : "Export CSV ▾"}
+          </button>
+          {menuOpen && (
+            <div className="export-options" role="menu">
+              {CSV_KINDS.map(([kind, text]) => (
+                <button type="button" role="menuitem" key={kind} onClick={() => download(kind)}>
+                  {text}
+                  <small>{label}</small>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       {(error || resource.error) && (
         <Message error={Boolean(error)}>{error || resource.error}</Message>
@@ -429,18 +509,23 @@ export function ReportScreen() {
                 <dd>{report.oat_cups ?? 0}</dd>
               </div>
               {/* Stories 15 and 16: cancelled and discarded orders. */}
+              {/* These tiles open their view. */}
               <div>
                 <dt>Cancelled</dt>
                 <dd>
-                  {report.cancelled_orders ?? 0}
-                  {report.refunded_cents > 0 && (
-                    <small> · {money(report.refunded_cents)} refunded</small>
-                  )}
+                  <button type="button" className="tile-link" onClick={() => setView("cancelled")}>
+                    {report.cancelled_orders ?? 0}
+                    {report.refunded_cents > 0 && <small> · {money(report.refunded_cents)} refunded</small>}
+                  </button>
                 </dd>
               </div>
               <div>
                 <dt>Discarded</dt>
-                <dd>{report.discarded_orders ?? 0}</dd>
+                <dd>
+                  <button type="button" className="tile-link" onClick={() => setView("discarded")}>
+                    {report.discarded_orders ?? 0}
+                  </button>
+                </dd>
               </div>
             </dl>
             <p className="strip-note">
@@ -449,6 +534,18 @@ export function ReportScreen() {
               for the day.
             </p>
           </div>
+          {view !== "sold" && (
+            <OrderList
+              view={view}
+              data={orders.data}
+              list={list}
+              moneyFilter={moneyFilter}
+              setMoneyFilter={setMoneyFilter}
+              segmented={segmented}
+              error={orders.error}
+            />
+          )}
+          {view === "sold" && (
           <div className="report-tables">
             {report.drinks?.length > 0 && (
               <section className="panel table-panel">
@@ -482,7 +579,7 @@ export function ReportScreen() {
             <section className="panel table-panel">
               <div className="panel-heading">
                 <h2>By item</h2>
-                <span className="muted small">{day}</span>
+                <span className="muted small">{label}</span>
               </div>
               <div className="table-scroll">
                 <table>
@@ -526,6 +623,7 @@ export function ReportScreen() {
               )}
             </section>
           </div>
+          )}
         </>
       )}
       <p className="footnote">
@@ -533,6 +631,85 @@ export function ReportScreen() {
         there are not reflected here. The CSV contains no guest names.
       </p>
     </>
+  );
+}
+// Cancelled (with the refund tally and final amount), Discarded and All orders lists.
+function OrderList({ view, data, list, moneyFilter, setMoneyFilter, segmented, error }) {
+  const columns = {
+    cancelled: ["Date", "Time", "Order", "Drinks", "Amount", "Reason", "Money", "By"],
+    discarded: ["Date", "Time", "Order", "Drinks", "Amount", "Waited", "By"],
+    all: ["Date", "Time", "Order", "Status", "Drinks", "Amount", "In sales"],
+  }[view];
+  return (
+    <section className="panel table-panel report-orders">
+      {view === "cancelled" && (
+        <div className="money-filter">
+          <strong>Money</strong>
+          {segmented(MONEY_FILTERS, moneyFilter, setMoneyFilter, "Money")}
+        </div>
+      )}
+      {view === "cancelled" && data && (
+        <dl className="cancel-tally">
+          <div>
+            <dt>Refunded on POS</dt>
+            <dd>{money(data.refunded_cents)}</dd>
+          </div>
+          <div>
+            <dt>Not paid yet</dt>
+            <dd>{money(data.not_paid_cents)}</dd>
+          </div>
+          <div>
+            <dt>Paid, no refund (in sales)</dt>
+            <dd>{money(data.no_refund_cents)}</dd>
+          </div>
+          <div className="tally-final">
+            <dt>Final sales (matches the POS)</dt>
+            <dd>{money(data.final_sales_cents)}</dd>
+          </div>
+        </dl>
+      )}
+      {error && <Message>{error}</Message>}
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              {columns.map((c) => (
+                <th key={c}>{c}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((o) => (
+              <tr key={`${o.event_day}-${o.order_number}`}>
+                <td>{o.event_day}</td>
+                <td>{view === "all" ? o.time : o.closed_time || o.time}</td>
+                <td>
+                  <strong>{o.order_number}</strong>
+                </td>
+                {view === "all" && <td>{STATUS_TEXT[o.status] || o.status}</td>}
+                <td>{o.drinks}</td>
+                <td>{money(o.amount_cents)}</td>
+                {view === "cancelled" && (
+                  <>
+                    <td>{o.reason}</td>
+                    <td>{o.money}</td>
+                    <td>{o.by}</td>
+                  </>
+                )}
+                {view === "discarded" && (
+                  <>
+                    <td>{o.waited_min == null ? "—" : `${o.waited_min} min`}</td>
+                    <td>{o.by}</td>
+                  </>
+                )}
+                {view === "all" && <td>{o.counts_in_sales ? "Yes" : "No"}</td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {data && !list.length && <Empty title="Nothing to show for these choices" />}
+    </section>
   );
 }
 function time(value) {
