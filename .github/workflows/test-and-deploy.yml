@@ -15,8 +15,8 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
       - run: pip install -r requirements.txt
@@ -37,8 +37,10 @@ jobs:
         if: env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != ''
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          # Strip Windows line endings: a key pasted on Windows can carry them, and ssh then fails with "error in libcrypto".
+          printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null || { echo "DEPLOY_SSH_KEY is not a readable private key without a passphrase: paste the whole file, from the BEGIN line to the END line."; exit 1; }
           ssh-keyscan -t ed25519 "$DEPLOY_HOST" >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/deploy_key -o BatchMode=yes "deploy@$DEPLOY_HOST" deploy
           rm -f ~/.ssh/deploy_key

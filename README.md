@@ -21,6 +21,7 @@ This README is the step-by-step guide to install, deploy and run the system. Wha
 5. [Reset between event days](#5-reset-between-event-days)
 6. [Backups](#6-backups)
 7. [Run the tests](#7-run-the-tests)
+8. [FAQ](#8-faq)
 
 ## 1. What you need
 
@@ -164,6 +165,28 @@ The backend tests use a throw-away SQLite database and make their own random pas
 Optional, on a test server only (their orders count in sales):
 - `scripts/load_guest_pages.py`: opens many guest pages at once (300 pages passed).
 - `scripts/simulate_booth.py`: a busy booth placing, making and collecting orders (set `BB_SIM_PASSWORD` to a staff login's password).
+
+## 8. FAQ
+
+### An order page says it cannot connect, or a screen looks out of date
+
+This can happen on a phone or tablet that still has an old tab of the app open, for example after the app was updated or after an earlier test.
+
+1. Close every tab of the site on that device.
+2. Clear the browser data for the site:
+   - **iPhone / iPad Safari:** Settings → Apps → Safari → Advanced → Website Data → find the site → Delete (or Settings → Apps → Safari → Clear History and Website Data).
+   - **Chrome (Android, iPhone, laptop):** ⋮ → Delete browsing data → tick **Cookies and site data** and **Cached images and files** → Delete.
+3. Open the page again. A guest scans the order's QR code again (staff can show it from the ticket's QR button in **Queue**).
+
+**Booth devices:** before clearing data on a staff tablet or laptop, check the side bar shows **Synced**. Orders waiting to sync are kept in the browser, and clearing its data deletes them.
+
+### Two orders end in the same number (e.g. A001 and T001)
+
+Each tablet numbers its own orders, so two tablets can both have an order ending in 001. If staff type **001** + Enter on the Queue and both orders are still being made, nothing changes yet: the Queue lists them **oldest first**, with name and time ("1 · A001 Ann · 8:35 pm", "2 · T001 Ben · 8:37 pm"). Tap the right one, or type **1** or **2** + Enter on the number pad. An order that is already Ready is never listed, so when only one order with those digits is still being made it becomes Ready straight away. Typing the full number (A001) also works.
+
+### Testing a new version
+
+Before testing a new version, close the old tabs and clear the site's browsing data on every test device (steps above), so each device loads the new version instead of its saved copy.
 
 ## Folders
 
