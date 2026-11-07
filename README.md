@@ -173,4 +173,4 @@ Optional, on a test server only (their orders count in sales):
 | `frontend/` | Web app (React): staff screens, guest page, ready board |
 | `tests/` | Backend tests |
 | `scripts/` | Backups, guest-page load test, booth simulator |
-| `docs/` | Technical summary |
+| `docs/` | Technical summary (PDF) and submission memo |
