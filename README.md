@@ -24,7 +24,7 @@ This README is the step-by-step guide to install, deploy and run the system. Wha
 
 ## 1. What you need
 
-**To install:** [Docker](https://docs.docker.com/get-docker/) (Docker Desktop on Windows or Mac) and [Git](https://git-scm.com/downloads).
+**To install:** [Docker](https://docs.docker.com/get-docker/) (Docker Desktop on Windows or Mac) and [Git](https://git-scm.com/downloads). No GitHub account or SSH key is needed: the repository is cloned over HTTPS.
 
 **At the booth** (all in a web browser; nothing to install):
 
@@ -41,8 +41,8 @@ One person can run every station on one device.
 
 1. **Get the code:**
    ```bash
-   git clone <this repository's URL>
-   cd <the cloned folder>
+   git clone https://github.com/weinsg/bb-cafe-pos-2026-public.git
+   cd bb-cafe-pos-2026-public
    ```
 2. **Create your settings file** from the example:
    ```bash
@@ -91,7 +91,7 @@ Staff devices and phone cameras need **HTTPS**. `docker-compose.prod.yml` runs t
    ```
 4. **Get the code and create `.env`:**
    ```bash
-   git clone <this repository's URL> beansbeats
+   git clone https://github.com/weinsg/bb-cafe-pos-2026-public.git beansbeats
    cd beansbeats
    cp .env.example .env
    ```
