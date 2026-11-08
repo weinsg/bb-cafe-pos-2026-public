@@ -11,7 +11,7 @@ It replaces shouting names and paper tickets with a Luckin-style flow:
 - Baristas work a **live queue**: one tap for Making, one tap for Ready, or type the 3-digit number on a number pad and press Enter (a laptop needs a small USB number pad).
 - A **ready board** on a second screen shows the numbers and names ready to collect.
 - At pickup, staff **scan the guest's QR with the device camera**; no QR reader or printer needed.
-- The Booth Lead can **change the menu, prices and sold-out items** live, and the **Daily sales** report tallies sales, cancels and refunds for a day or all event days, with four CSV exports and a final total that matches the organiser's POS.
+- The Booth Lead can **change the menu, prices and sold-out items** live, and the **Report** report tallies sales, cancels and refunds for a day or all event days, with five CSV exports and a final recorded total for reconciliation with the organiser's POS.
 
 All six modules in the brief are built and live at https://165-22-242-253.sslip.io. Extras:
 
@@ -33,7 +33,7 @@ All six modules in the brief are built and live at https://165-22-242-253.sslip.
 
 **Data:** only the guest's first name. No phone numbers, emails, payment details, cookies or analytics. The menu and prices are the owner's real menu. All testing used made-up orders and a booth simulator.
 
-## Results
+## Baseline results (7 November 2026)
 
 - **All 6 required modules live**, plus 8 extras.
 - **99 automated backend tests** pass on both SQLite and PostgreSQL.
@@ -41,7 +41,7 @@ All six modules in the brief are built and live at https://165-22-242-253.sslip.
 - **211 written acceptance tests:** 169 fully passed; 13 passed in testing with only a real-device check left; 26 waiting on real phones, tablets or the hall itself; 3 still open (two need a working connection between booth devices without internet, and one is the 300-phone test on the live server).
 - **Load:** 300 guest phones checking for 10 minutes on a 1-CPU test server. 95% of answers came within **10 ms**, with **0 errors**. Before the fix, the old design took **8.4 s** in the same test and **25.6 s** on the live server. Even with live push down on all 300 phones, answers stayed under **0.3 s**.
 - **Speed at the counter:** an order takes a few taps, marking Ready takes 1 tap (or 3 digits + Enter), and the queue shows **10 tickets on one tablet screen** without scrolling.
-- **Matches the POS:** cancels record whether money was refunded, so the daily total lines up with the organiser's POS.
+- **POS reconciliation:** staff record refund status so the final recorded total can be compared with the organiser's POS; actual POS transactions are not independently verified.
 
 ## Limitations and next steps
 

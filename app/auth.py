@@ -122,18 +122,18 @@ RequireAdmin = Annotated[User, Depends(require_role(["admin"]))]
 
 
 def can_cancel(session: Session, user: User) -> bool:
-    """Every role may cancel; a Booth Lead or Admin can switch a barista's right off."""
-    if user.role in ("admin", "booth_lead"):
+    """BRD A15: every role may cancel; a Booth Lead or Admin can switch a barista's right off."""
+    if user.role == "admin":
         return True
     setting = session.get(CancelAccess, user.id)
-    return user.role == "barista" and (setting is None or setting.enabled)
+    return user.role in ("barista", "booth_lead") and (setting is None or setting.enabled)
 
 
 def can_view_completed(session: Session, user: User) -> bool:
-    if user.role in ("admin", "booth_lead"):
+    if user.role == "admin":
         return True
     setting = session.get(CompletedAccess, user.id)
-    return user.role == "barista" and (setting is None or setting.enabled)
+    return user.role in ("barista", "booth_lead") and (setting is None or setting.enabled)
 
 
 def require_completed_access(session: SessionDep, user: RequireBarista) -> User:

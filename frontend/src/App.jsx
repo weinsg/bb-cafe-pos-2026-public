@@ -114,7 +114,7 @@ const nav = [
   ["queue", "Queue", "queue", true],
   ["pickup", "Pickup", "qr", true],
   ["menu", "Menu", "menu", false],
-  ["reports", "Daily sales", "report", false],
+  ["reports", "Report", "report", false],
   ["settings", "Settings", "settings", false],
 ];
 

@@ -62,6 +62,39 @@ class TestCompletedAccess(unittest.TestCase):
         admin_id = self.client.get('/api/auth/me', headers=self.admin).json()['id']
         self.assertEqual(self.client.patch('/api/admin/staff-permissions', json={'user_ids': [admin_id], 'enabled': False}, headers=self.lead).status_code, 400)
 
+    def test_admin_controls_lead_rights_without_allowing_peer_or_admin_changes(self):
+        lead_id = self.client.get('/api/auth/me', headers=self.lead).json()['id']
+        admin_id = self.client.get('/api/auth/me', headers=self.admin).json()['id']
+        self.assertIn(lead_id, [u['id'] for u in self.client.get('/api/admin/staff-permissions', headers=self.admin).json()])
+        self.assertNotIn(lead_id, [u['id'] for u in self.client.get('/api/admin/staff-permissions', headers=self.lead).json()])
+        for endpoint, right in [('staff-permissions', 'can_view_completed'), ('cancel-permissions', 'can_cancel')]:
+            url = '/api/admin/' + endpoint
+            self.assertEqual(self.client.patch(url, headers=self.admin, json={'user_ids': [lead_id], 'enabled': False}).status_code, 200)
+            self.assertFalse(self.client.get('/api/auth/me', headers=self.lead).json()[right])
+            self.assertTrue(self.client.get('/api/auth/me', headers=self.admin).json()[right])
+            for actor in [self.lead, self.admin]:
+                self.assertEqual(self.client.patch(url, headers=actor, json={'user_ids': [admin_id], 'enabled': False}).status_code, 400)
+            self.assertEqual(self.client.patch(url, headers=self.lead, json={'user_ids': [lead_id], 'enabled': True}).status_code, 400)
+        self.assertEqual(self.client.get('/api/orders/completed', headers=self.lead).status_code, 403)
+        # Turning these rights off does not remove the Lead's report/menu/Barista-management role.
+        self.assertEqual(self.client.get('/api/reports/daily', headers=self.lead).status_code, 200)
+        order = self.completed_order()
+        device = self.device
+        response = self.client.post('/api/sync', headers=self.lead, json={
+            'id': str(uuid.uuid4()), 'device_id': device, 'occurred_at': dt.datetime.now(dt.timezone.utc).isoformat(),
+            'kind': 'order.status', 'payload': {'id': order['id'], 'status': 'cancelled', 'reason': 'duplicate', 'money': 'no_refund'}})
+        # Final orders cannot be cancelled by any role; verify a live order instead.
+        fresh = self.client.post('/api/orders', headers=self.lead, json={
+            'idempotency_key': str(uuid.uuid4()), 'first_name': 'Guest', 'items': [{'item_name': 'Latte', 'unit_price_cents': 800}]}).json()
+        response = self.client.post('/api/sync', headers=self.lead, json={
+            'id': str(uuid.uuid4()), 'device_id': device, 'occurred_at': dt.datetime.now(dt.timezone.utc).isoformat(),
+            'kind': 'order.status', 'payload': {'id': fresh['id'], 'status': 'cancelled', 'reason': 'duplicate', 'money': 'no_refund'}})
+        self.assertEqual(response.status_code, 403)
+        for endpoint in ['staff-permissions', 'cancel-permissions']:
+            self.assertEqual(self.client.patch('/api/admin/' + endpoint, headers=self.admin,
+                json={'user_ids': [lead_id], 'enabled': True}).status_code, 200)
+        self.assertTrue(self.client.get('/api/auth/me', headers=self.lead).json()['can_cancel'])
+
     def test_reopen_is_audited_and_old_offline_status_cannot_recollect(self):
         order = self.completed_order()
         payload = {'confirm': True, 'reason': 'accidental_tap', 'status_revision': 0}

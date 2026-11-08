@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { listen } from "./liveEvents";
 import { api, ownChanges } from "./data";
 import { Icon } from "./ui";
@@ -12,9 +12,24 @@ const time = (value) =>
     timeZone: "Asia/Singapore",
   });
 
-// "admin_john · Making step switched off · 9:42 pm" on other staff devices.
-// Stays until tapped; hides itself after 8 s on the Queue; never on Pickup.
+// BRD A13: "admin_john · Making step switched off · 9:42 pm" on other staff devices.
+// Each notice expires after 3 s without moving focus; never on Pickup.
 // The public live-update channel only says "a setting changed"; who and what come from a staff-only API.
+function SettingNotice({ item, dismiss }) {
+  useEffect(() => {
+    const timer = setTimeout(() => dismiss(item.id), 3000);
+    return () => clearTimeout(timer);
+  }, [item.id, dismiss]);
+  return (
+    <button className="settings-strip-item"
+      aria-label={`Dismiss: ${item.staff_username} · ${item.details}`}
+      onClick={() => dismiss(item.id)}>
+      <Icon name="settings" size={18} />
+      <span><strong>{item.staff_username}</strong> · {item.details} · {time(item.timestamp)}</span>
+      <Icon name="close" size={16} />
+    </button>
+  );
+}
 export function SettingsStrip({ page }) {
   const [items, setItems] = useState([]);
   const seen = useRef(null);
@@ -56,30 +71,12 @@ export function SettingsStrip({ page }) {
       window.removeEventListener("online", load);
     };
   }, []);
-  useEffect(() => {
-    if (page !== "queue" || !items.length) return undefined;
-    const timer = setTimeout(() => setItems([]), 8000);
-    return () => clearTimeout(timer);
-  }, [page, items]);
+  const dismiss = useCallback((id) => setItems((list) => list.filter((row) => row.id !== id)), []);
   if (page === "pickup" || !items.length) return null;
   return (
     <div className="settings-strip" role="status" aria-label="Setting changes">
       {items.map((item) => (
-        <button
-          key={item.id}
-          className="settings-strip-item"
-          aria-label={`Dismiss: ${item.staff_username} · ${item.details}`}
-          onClick={() =>
-            setItems((list) => list.filter((row) => row.id !== item.id))
-          }
-        >
-          <Icon name="settings" size={18} />
-          <span>
-            <strong>{item.staff_username}</strong> · {item.details} ·{" "}
-            {time(item.timestamp)}
-          </span>
-          <Icon name="close" size={16} />
-        </button>
+        <SettingNotice key={item.id} item={item} dismiss={dismiss} />
       ))}
     </div>
   );

@@ -232,6 +232,7 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
     setError("");
     try {
       await changeStatus(order, status, extra);
+      if (status === "discarded") setNotice(`Discard saved locally for ${order.order_number}. Report uses order date ${order.event_day}; check Synced before reviewing. Choose All event days for older orders.`);
       setCancel(null);
       setDiscard(null);
     } catch (err) {
@@ -562,7 +563,7 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
           <p>
             This drink has waited {waited(discard)} minutes. Discard it for
             hygiene? The guest's page will say it was discarded. It stays in
-            today's sales.
+            sales for its original order date, {discard.event_day}. In Report, choose that date or All event days.
           </p>
           {error && <Message error>{error}</Message>}
           <div className="dialog-actions">

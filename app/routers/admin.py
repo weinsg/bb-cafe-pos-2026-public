@@ -315,24 +315,26 @@ def get_audit_logs(
 
 @router.get("/staff-permissions", response_model=List[UserResponse])
 def staff_permissions(session: SessionDep, user: RequireBoothLead):
-    staff = session.exec(select(User).where(User.role == "barista").order_by(User.username)).all()
+    roles = ["barista", "booth_lead"] if user.role == "admin" else ["barista"]
+    staff = session.exec(select(User).where(col(User.role).in_(roles)).order_by(User.role, User.username)).all()
     return [UserResponse(id=staff.id, username=staff.username, role=staff.role,
                          can_view_completed=can_view_completed(session, staff),
                          can_cancel=can_cancel(session, staff)) for staff in staff]
 
 
-def _baristas(session, user_ids):
+def _permission_targets(session, user_ids, actor):
     ids = sorted(set(user_ids))
     targets = [session.get(User, user_id) for user_id in ids]
-    if any(target is None or target.role != "barista" for target in targets):
-        raise HTTPException(400, "Select barista accounts only")
+    allowed = ("barista", "booth_lead") if actor.role == "admin" else ("barista",)
+    if any(target is None or target.role not in allowed or target.id == actor.id for target in targets):
+        raise HTTPException(400, "Select accounts below your role: Admin manages Leads and Baristas; Leads manage Baristas")
     return targets
 
 
 @router.patch("/staff-permissions", response_model=List[UserResponse])
 async def update_staff_permissions(request: CompletedAccessUpdate, session: SessionDep, user: RequireBoothLead,
                                    x_change_id: ChangeId = None):
-    targets = _baristas(session, request.user_ids)
+    targets = _permission_targets(session, request.user_ids, user)
     lock_counter(session, "completed-permissions")
     for target in targets:
         access = session.get(CompletedAccess, target.id) or CompletedAccess(user_id=target.id)
@@ -349,8 +351,8 @@ async def update_staff_permissions(request: CompletedAccessUpdate, session: Sess
 @router.patch("/cancel-permissions", response_model=List[UserResponse])
 async def update_cancel_permissions(request: CompletedAccessUpdate, session: SessionDep, user: RequireBoothLead,
                                     x_change_id: ChangeId = None):
-    """Switch a barista's cancel right off or on (Booth Lead and Admin can always cancel)."""
-    targets = _baristas(session, request.user_ids)
+    """BRD A15: switch a barista's cancel right off or on (Admin always retains access)."""
+    targets = _permission_targets(session, request.user_ids, user)
     lock_counter(session, "cancel-permissions")
     for target in targets:
         access = session.get(CancelAccess, target.id) or CancelAccess(user_id=target.id)

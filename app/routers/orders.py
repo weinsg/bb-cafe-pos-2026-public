@@ -1,5 +1,6 @@
 """Orders, barista queue, ready board, and guest status router (Modules 1, 2, 3, 4)."""
 
+from ..order_history import record_stage
 import datetime
 import time
 import uuid
@@ -201,6 +202,7 @@ async def create_order(
         details=f"Created order with {len(order_in.items)} item(s), total ${total_cents / 100:.2f}",
     )
     session.add(audit)
+    record_stage(session, order, "received", user, audit.id, order.created_at, order.device_id)
     session.commit()
     session.refresh(order)
 
@@ -350,9 +352,11 @@ async def reopen_order(order_id: str, request: ReopenOrderRequest,
     order.collected_at = None
     session.add(order)
     session.add(revision)
-    session.add(AuditLog(id=str(uuid.uuid4()), staff_username=user.username, action="COLLECTION_CORRECTED",
+    correction_id = str(uuid.uuid4())
+    session.add(AuditLog(id=correction_id, staff_username=user.username, action="COLLECTION_CORRECTED",
                          order_number=order.order_number,
                          details=f"Collected -> ready; reason={request.reason}; previous collection={previous_collection}; revision={revision.value}"))
+    record_stage(session, order, "ready", user, correction_id, order.ready_at)
     session.commit()
     session.refresh(order)
     await broadcaster.publish("order_corrected", {}, order_id=order.id)
@@ -611,6 +615,8 @@ async def update_order_status(
         details=f"Status updated to '{target_status}'" if changed else f"Requested '{target_status}'; already '{order.status}', no change",
     )
     session.add(audit)
+    if changed:
+        record_stage(session, order, target_status, user, audit.id, now)
     session.commit()
     session.refresh(order)
 

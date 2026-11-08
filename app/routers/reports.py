@@ -1,8 +1,10 @@
 """Daily sales report and CSV export router (Module 6)."""
 
+from ..reporting import enrich, summary, breakdown, details_csv, stamp
 import csv
 import datetime
 import io
+import json
 import uuid
 from typing import List, Literal, Optional
 from zoneinfo import ZoneInfo
@@ -13,7 +15,7 @@ from sqlmodel import col, func, select
 
 from ..auth import RequireBoothLead
 from ..database import SessionDep
-from ..models import Order, OrderClosure, OrderItem, AuditLog
+from ..models import Order, OrderClosure, OrderItem, AuditLog, OrderStage, SyncReceipt
 from ..schemas import DailyDrinkTotal, DailyReportResponse, DailySalesItem, ReportOrder, ReportOrdersResponse
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
@@ -102,14 +104,13 @@ def get_daily_sales_report(
     event_day: Optional[str] = None,
     scope: Literal["day", "all"] = "day",
 ) -> DailyReportResponse:
-    target_day = (
-        event_day
-        if event_day
-        else datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
-    )
-    if scope == "all":
-        return _calculate_daily_summary(session, "all", _all_days(session) or [target_day])
-    return _calculate_daily_summary(session, target_day)
+    days = _days(session, event_day, scope)
+    report = _calculate_daily_summary(session, "all" if scope == "all" else days[0], days)
+    orders = _report_orders(session, days, "all")
+    report.summary = summary(orders)
+    report.breakdown = breakdown(orders)
+    report.generated_at = stamp(datetime.datetime.now(datetime.timezone.utc))
+    return report
 
 
 @router.get("/daily/csv")
@@ -225,6 +226,21 @@ def _report_orders(session, days: list[str], kind: str) -> list[ReportOrder]:
     if ids:
         for item in session.exec(select(OrderItem).where(col(OrderItem.order_id).in_(ids))).all():
             items.setdefault(item.order_id, []).append(item)
+    # Batch stage/receipt reads so a four-day report does not query once per order.
+    stages_by_id, logs_by_id = {}, {}
+    if ids:
+        for row in session.exec(select(OrderStage).where(col(OrderStage.order_id).in_(ids))).all():
+            stages_by_id.setdefault(row.order_id, []).append(row)
+        numbers = list({o.order_number for o, _ in rows})
+        wanted = set(ids)
+        for log, receipt in session.exec(select(AuditLog, SyncReceipt).join(SyncReceipt, SyncReceipt.id == AuditLog.id)
+                                        .where(col(AuditLog.order_number).in_(numbers))).all():
+            try:
+                order_id = json.loads(receipt.result).get("order_id")
+            except (ValueError, TypeError):
+                continue
+            if order_id in wanted:
+                logs_by_id.setdefault(order_id, []).append((log, receipt))
     result = []
     for order, closure in rows:
         drinks = items.get(order.id, [])
@@ -234,7 +250,7 @@ def _report_orders(session, days: list[str], kind: str) -> list[ReportOrder]:
         result.append(ReportOrder(
             event_day=order.event_day, order_number=order.order_number, time=_local(order.created_at),
             status=order.status, drinks=_drinks_text(drinks),
-            lines=[{"item": d.item_name, "temperature": d.temperature or "", "milk": d.milk or "", "quantity": d.quantity,
+            lines=[{"line_id": d.id, "item": d.item_name, "temperature": d.temperature or "", "milk": d.milk or "", "quantity": d.quantity,
                     "unit_price_cents": d.unit_price_cents} for d in drinks],
             amount_cents=order.total_price_cents,
             counts_in_sales=order.status != "cancelled" or (closure is not None and closure.money == "no_refund"),
@@ -243,6 +259,7 @@ def _report_orders(session, days: list[str], kind: str) -> list[ReportOrder]:
             by=closure.staff_username if closure else None,
             closed_time=_local(closure.closed_at) if closure else None,
             waited_min=waited,
+            **enrich(session, order, closure, drinks, stages_by_id.get(order.id, []), logs_by_id.get(order.id, [])),
         ))
     return result
 
@@ -253,7 +270,8 @@ def _orders_response(session, days, kind) -> ReportOrdersResponse:
     tally = {key: sum(o.amount_cents for o in cancelled if o.money == label) for key, label in MONEY.items()}
     final = _calculate_daily_summary(session, days[0], days).total_revenue_cents if days else 0
     return ReportOrdersResponse(scope_days=days, kind=kind, orders=orders, refunded_cents=tally["refunded"],
-                                not_paid_cents=tally["not_paid"], no_refund_cents=tally["no_refund"], final_sales_cents=final)
+                                not_paid_cents=tally["not_paid"], no_refund_cents=tally["no_refund"], final_sales_cents=final,
+                                summary=summary(orders), breakdown=breakdown(orders), generated_at=stamp(datetime.datetime.now(datetime.timezone.utc)))
 
 
 @router.get("/orders", response_model=ReportOrdersResponse)
@@ -263,8 +281,8 @@ def get_report_orders(session: SessionDep, user: RequireBoothLead, kind: Literal
     return _orders_response(session, _days(session, event_day, scope), kind)
 
 
-CSV_LABELS = {"sales": "sales by item", "cancelled": "cancelled orders", "discarded": "discarded drinks", "all": "all orders"}
-CSV_FILES = {"sales": "sales", "cancelled": "cancelled", "discarded": "discarded", "all": "all_orders"}
+CSV_LABELS = {"complete": "complete sales report", "sales": "sales by item", "cancelled": "cancelled orders", "discarded": "discarded drinks", "all": "all orders"}
+CSV_FILES = {"complete": "complete_sales", "sales": "sales", "cancelled": "cancelled", "discarded": "discarded", "all": "all_orders"}
 
 
 def _cents(cents: int) -> str:
@@ -273,7 +291,7 @@ def _cents(cents: int) -> str:
 
 @router.get("/csv")
 def export_report_csv(session: SessionDep, user: RequireBoothLead,
-                      kind: Literal["sales", "cancelled", "discarded", "all"] = "sales",
+                      kind: Literal["sales", "complete", "cancelled", "discarded", "all"] = "sales",
                       event_day: Optional[str] = None, scope: Literal["day", "all"] = "day") -> Response:
     """Sales by item, cancelled orders (with the refund tally), discarded drinks or all orders; no guest names."""
     days = _days(session, event_day, scope)
@@ -292,31 +310,10 @@ def export_report_csv(session: SessionDep, user: RequireBoothLead,
             grand_cents += report.total_revenue_cents
         if scope == "all":
             w.writerow(["ALL EVENT DAYS", "GRAND TOTAL", "", "", grand_cups, "-", _cents(grand_cents)])
-    elif kind == "cancelled":
-        data = _orders_response(session, days, "cancelled")
-        w.writerow(["date", "order", "time", "drinks", "amount", "reason", "money", "cancelled_by", "cancelled_at"])
-        for o in data.orders:
-            w.writerow([o.event_day, o.order_number, o.time, o.drinks, _cents(o.amount_cents), o.reason or "",
-                        o.money or "", o.by or "", o.closed_time or ""])
-        w.writerow([])
-        w.writerow(["", "REFUNDED ON POS", "", "", _cents(data.refunded_cents)])
-        w.writerow(["", "NOT PAID YET", "", "", _cents(data.not_paid_cents)])
-        w.writerow(["", "PAID, NO REFUND (counted in sales)", "", "", _cents(data.no_refund_cents)])
-        w.writerow(["", "FINAL SALES (matches the POS)", "", "", _cents(data.final_sales_cents)])
-    elif kind == "discarded":
-        w.writerow(["date", "order", "time", "drinks", "amount", "waited_min", "discarded_by", "discarded_at"])
-        for o in _report_orders(session, days, "discarded") if days else []:
-            w.writerow([o.event_day, o.order_number, o.time, o.drinks, _cents(o.amount_cents),
-                        "" if o.waited_min is None else o.waited_min, o.by or "", o.closed_time or ""])
     else:
-        w.writerow(["date", "order", "time", "status", "item", "temperature", "milk", "quantity", "unit_price",
-                    "line_total", "counted_in_sales", "reason", "money", "by"])
-        for o in _report_orders(session, days, "all") if days else []:
-            for line in o.lines:
-                w.writerow([o.event_day, o.order_number, o.time, o.status, line["item"], line["temperature"],
-                            line["milk"], line["quantity"], _cents(line["unit_price_cents"]),
-                            _cents(line["unit_price_cents"] * line["quantity"]), "yes" if o.counts_in_sales else "no",
-                            o.reason or "", o.money or "", o.by or ""])
+        master = _report_orders(session, days, "all") if days else []
+        selected = [o for o in master if o.status == kind] if kind in ("cancelled", "discarded") else master
+        out = io.StringIO(details_csv(selected, days, kind, summary(master)))
     label = "all-days" if scope == "all" else (days[0] if days else "none")
     session.add(AuditLog(id=str(uuid.uuid4()), staff_username=user.username, action="CSV_EXPORT",
                          details=f"Exported {CSV_LABELS[kind]} for {'all event days' if scope == 'all' else label}"))

@@ -10,7 +10,7 @@
 
 Order and pickup system for the Beans&Beats charity coffee booth at Christmas Together 2026 (26–29 November, Hall F, Marina Bay Sands). Baristas take orders on a tablet or laptop, work a live queue, and guests follow their drink on their own phone, with an alert when it is ready. Payment stays on the organiser's POS. All profits go to Singapore Red Cross Young Hearts.
 
-This README is the step-by-step guide to install, deploy and run the system. What every screen does is in the [technical summary](docs/technical_summary.pdf).
+This README is the step-by-step guide to install, deploy and run the system. The [technical summary](docs/technical_summary.pdf) provides the earlier architecture overview; the release notes below describe the current Report screens and controls.
 
 ## Contents
 
@@ -22,6 +22,21 @@ This README is the step-by-step guide to install, deploy and run the system. Wha
 6. [Backups](#6-backups)
 7. [Run the tests](#7-run-the-tests)
 8. [FAQ](#8-faq)
+
+## Latest application update — 8 November 2026
+
+Synced from verified application release `d7e2213`, retaining this public repository's environment-only account setup, hidden demo credentials and separate Git history.
+
+- **Report** replaces Daily sales. Sales reconciles recorded order value, refunded and unpaid cancellations, and final recorded sales. Paid discarded drinks and paid cancellations without refunds remain included; discarded orders/cups/value are shown separately.
+- **All orders** supplies the detailed master records: order IDs, captured prices, stage timestamps and staff logins, available device/sync metadata and durations. Cancelled and Discarded exports use the same definitions. Five export choices include the Complete sales report; guest names are excluded.
+- Dates refer to the **original order event date**, not the date staff discarded/cancelled it. Use **All event days** to find older orders. Full action timestamps use Singapore time. Missing historical metadata says Not recorded.
+- Report sections collapse/expand, with useful figures in their headings. Compact totals stay visible. Sales summary/By drink start open; other sections start closed. Choices are remembered per login/browser/device across reload/navigation. Summary links open and scroll to relevant details; Expand all/Collapse all affects report sections, not individual orders. CSV content stays complete regardless of presentation.
+- Admin can manage Booth Leads' and Baristas' Completed-order and cancellation rights; Leads manage Baristas only. Admin retains full access.
+- Settings-change notices dismiss independently after **3 seconds**, preserving the Queue's Ready # input focus and digits.
+
+Payments/refunds are recorded on the organiser's POS and are not independently verified by this app. Partial refunds and refunds after discard remain unsupported. Physical Safari/Android acceptance and event network hardening remain separate work. The existing PDF/DOCX deliverables are earlier snapshots; these release notes describe the current code.
+
+**Public-copy verification:** 14 targeted backend tests passed on disposable SQLite (permissions, reports and secret configuration); production frontend build passed. Changed backend implementations match the verified application release, with public-only account setup retained. Gitleaks found **0 leaks** in the current files and existing public Git history before publication. Private environment files, history and browser suites containing development credentials were not copied. The public repository's GitHub workflow runs the full backend suite on push.
 
 ## 1. What you need
 
@@ -134,7 +149,7 @@ At the end of each event day (or the next morning, before the first order):
 3. Choose the day to close (normally yesterday), then **Review day reset**.
 4. Confirm the devices have synced, then **Close day and clear names**.
 
-What happens: that day's orders leave the queue and the board, and **guests' first names are cleared**. Sales, the daily report and the audit trail stay, without guest names. The next day starts again from order 001. Export that day's CSV from **Daily sales → Export CSV ▾** first if you need it for the POS check (Sales by item, Cancelled orders with the refund tally, Discarded drinks or All orders).
+What happens: that day's orders leave the queue and the board, and **guests' first names are cleared**. Sales, the daily report and the audit trail stay, without guest names. The next day starts again from order 001. Export that day's CSV from **Report → Export CSV ▾** first if you need it for the POS check (Complete sales report, Sales by item, Cancelled orders, Discarded drinks or All orders).
 
 ## 6. Backups
 

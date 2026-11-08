@@ -1,5 +1,6 @@
 """Durable device actions: a receipt and its business change commit together."""
 
+from ..order_history import record_stage
 import datetime as dt
 import json
 import uuid
@@ -159,6 +160,7 @@ async def sync_action(action: DeviceAction, session: SessionDep, user: RequireBa
                                   total_price_cents=sum(i.unit_price_cents * i.quantity for i in data.items))
                     session.add(order)
                     session.flush()
+                    record_stage(session, order, "received", user, action.id, utc(action.occurred_at), action.device_id)
                     for item in data.items:
                         session.add(OrderItem(order_id=order.id, **item.model_dump()))
                     session.flush()
@@ -200,6 +202,7 @@ async def sync_action(action: DeviceAction, session: SessionDep, user: RequireBa
                 session.add(order)
                 session.add(OrderClosure(order_id=order.id, kind=target, reason=reason, money=money,
                                          staff_username=user.username, closed_at=utc(action.occurred_at)))
+                record_stage(session, order, target, user, action.id, utc(action.occurred_at), action.device_id)
                 audit_action = "ORDER_CANCELLED" if target == "cancelled" else "ORDER_DISCARDED"
                 details = (f"{previous} -> {target}; reason={reason}" + (f"; money={money}" if money else ""))
             elif target == "collected" and order.status in ("received", "making"):
@@ -207,6 +210,7 @@ async def sync_action(action: DeviceAction, session: SessionDep, user: RequireBa
                 raise HTTPException(409, f"Order {number} is not ready yet and cannot be collected")
             elif STATUS_RANKS[target] > STATUS_RANKS[order.status]:
                 order.status = target
+                record_stage(session, order, target, user, action.id, utc(action.occurred_at), action.device_id)
                 setattr(order, f"{target}_at", utc(action.occurred_at))
                 session.add(order)
                 audit_action = "STATUS_CHANGE"

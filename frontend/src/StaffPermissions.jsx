@@ -47,10 +47,10 @@ export function StaffPermissionsScreen() {
       {feedback && <Message>{feedback}</Message>}
       <section className="panel table-panel">
         <div className="panel-heading">
-          <h2>Completed orders</h2>
+          <h2>Staff permissions</h2>
           <span className="muted small">
-            Choose which baristas can view Completed orders and cancel orders.
-            Admin and Booth Lead always can.
+            Admin manages Leads and Baristas; Leads manage Baristas.
+            Control Completed orders and cancellation separately. Admin retains full access.
           </span>
         </div>
         <div className="access-batch">
@@ -77,7 +77,7 @@ export function StaffPermissionsScreen() {
                 <th>
                   <input
                     type="checkbox"
-                    aria-label="Select all baristas"
+                    aria-label="Select all manageable staff"
                     disabled={!accounts.length || saving}
                     checked={
                       accounts.length > 0 && selected.length === accounts.length
@@ -115,7 +115,7 @@ export function StaffPermissionsScreen() {
                   </td>
                   <td>
                     <strong>{user.username}</strong>
-                    <small>Barista</small>
+                    <small>{user.role === "booth_lead" ? "Booth Lead" : "Barista"}</small>
                   </td>
                   <td>{user.can_view_completed ? "Can view" : "Hidden"}</td>
                   <td>
@@ -148,8 +148,8 @@ export function StaffPermissionsScreen() {
           </table>
         </div>
         {!accounts.length && (
-          <Empty title={staff ? "No barista accounts" : "Loading staff…"}>
-            Barista accounts appear here for access management.
+          <Empty title={staff ? "No manageable accounts" : "Loading staff…"}>
+            Accounts below your role appear here for access management.
           </Empty>
         )}
       </section>

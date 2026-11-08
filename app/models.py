@@ -224,3 +224,16 @@ class SyncReceipt(SQLModel, table=True):
     synced_at: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
     result: str = "{}"
 
+
+
+class OrderStage(SQLModel, table=True):
+    """Current stage attribution, keyed by unique order ID (numbers repeat each day)."""
+    __tablename__ = "order_stages"
+    id: str = Field(primary_key=True)
+    order_id: str = Field(index=True)
+    stage: str
+    staff_username: str
+    device_id: Optional[str] = None
+    action_id: str
+    occurred_at: datetime.datetime
+    synced_at: datetime.datetime

@@ -11,6 +11,7 @@ const jitter = (ms) => new Promise((done) => setTimeout(done, Math.random() * ms
 // connected, checks every 20 s instead of every 5 s.
 export function useResource(path, cacheKey = path, cache = true, guest = false) {
   const [data, setData] = useState(null);
+  const [updatedAt, setUpdatedAt] = useState(null);
   const [error, setError] = useState("");
   const [connected, setConnected] = useState(false);
   const generation = useRef(0);
@@ -26,6 +27,7 @@ export function useResource(path, cacheKey = path, cache = true, guest = false) 
     let revision = 0;
     const current = ++generation.current;
     setData(null);
+    setUpdatedAt(null);
     setError("");
     setConnected(false);
     if (!path) return;
@@ -34,7 +36,7 @@ export function useResource(path, cacheKey = path, cache = true, guest = false) 
         .get(cacheKey)
         .then((row) => {
           if (alive && row && generation.current === current && revision === 0)
-            setData((previous) => previous || row.value);
+            { setData((previous) => previous || row.value); setUpdatedAt(row.updatedAt || null); }
         })
         .catch(() => {});
     const load = async () => {
@@ -56,9 +58,11 @@ export function useResource(path, cacheKey = path, cache = true, guest = false) 
         if (!alive || startedAt !== revision) return;
         tag = value?.event_tag || "";
         setData(value);
+        const fetchedAt = new Date().toISOString();
+        setUpdatedAt(fetchedAt);
         setConnected(true);
         setError("");
-        if (cache) await db.snapshots.put({ key: cacheKey, value });
+        if (cache) await db.snapshots.put({ key: cacheKey, value, updatedAt: fetchedAt });
       } catch (err) {
         if (!alive || startedAt !== revision) return;
         setConnected(false);
@@ -125,5 +129,5 @@ export function useResource(path, cacheKey = path, cache = true, guest = false) 
       document.removeEventListener("visibilitychange", visible);
     };
   }, [path, cacheKey, cache]);
-  return { data, error, connected, reload };
+  return { data, error, connected, reload, updatedAt };
 }

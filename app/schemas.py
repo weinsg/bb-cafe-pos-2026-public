@@ -229,6 +229,9 @@ class DailyReportResponse(BaseModel):
     refunded_cents: int = 0
     discarded_orders: int = 0
     drinks: List[DailyDrinkTotal] = []  # One row per drink
+    summary: dict = {}
+    generated_at: Optional[str] = None
+    breakdown: List[dict] = []
     items: List[DailySalesItem]  # One row per drink + options + unit price (CSV rows)
 
 
@@ -247,6 +250,15 @@ class ReportOrder(BaseModel):
     by: Optional[str] = None
     closed_time: Optional[str] = None
     waited_min: Optional[int] = None
+    order_id: str = ""
+    device_id: str = ""
+    cups: int = 0
+    stages: dict = {}
+    making_step: str = "Not recorded"
+    received_to_ready_min: Optional[float] = None
+    ready_to_collected_min: Optional[float] = None
+    ready_to_discarded_min: Optional[float] = None
+    received_to_final_min: Optional[float] = None
 
 
 class ReportOrdersResponse(BaseModel):
@@ -257,6 +269,9 @@ class ReportOrdersResponse(BaseModel):
     not_paid_cents: int = 0
     no_refund_cents: int = 0
     final_sales_cents: int = 0
+    summary: dict = {}
+    breakdown: List[dict] = []
+    generated_at: Optional[str] = None
 
 
 class ResetDayRequest(BaseModel):

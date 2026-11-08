@@ -6,6 +6,8 @@ import unittest
 import uuid
 
 from tests.test_cancel_discard_settings import Booth
+from sqlmodel import Session, select
+from tests.helpers import test_engine
 
 OTHER_DAY = "2026-11-26"
 
@@ -84,19 +86,34 @@ class TestReportViews(Booth):
         self.assertEqual(sales[0], ["date", "item", "temperature", "milk", "cups", "unit_price", "total"])
         self.assertEqual(sales[-1], [day, "TOTAL", "", "", "3", "-", "24.00"])
         self.assertIn(f"beansbeats_sales_{day}.csv", response.headers["content-disposition"])
+        def detail_rows(rows):
+            start = next(i for i, r in enumerate(rows) if r and r[:3] == ['date', 'order', 'order_id'])
+            return list(csv.DictReader(io.StringIO('\n'.join(','.join('"'+str(v).replace('"','""')+'"' for v in r) for r in rows[start:]))))
         _, cancelled = self.rows("cancelled")
-        self.assertEqual(cancelled[0][:5], ["date", "order", "time", "drinks", "amount"])
-        self.assertEqual(len([r for r in cancelled[1:] if r and r[0] == day]), 3)
-        tally = {r[1]: r[4] for r in cancelled if len(r) > 4 and r[0] == ""}
-        self.assertEqual(tally, {"REFUNDED ON POS": "10.00", "NOT PAID YET": "6.00",
-                                 "PAID, NO REFUND (counted in sales)": "7.00", "FINAL SALES (matches the POS)": "24.00"})
+        cancelled_details = detail_rows(cancelled)
+        self.assertEqual(len(cancelled_details), 3)
+        self.assertEqual({r['money'] for r in cancelled_details}, {'Refunded on POS', 'Not paid yet', 'Paid, no refund'})
+        self.assertEqual(sum(float(r['included_line_sales']) for r in cancelled_details), 7)
+        tally = {r[0]: r[3] for r in cancelled if len(r) == 5 and r[0] in ('refunded','unpaid','no_refund','final')}
+        self.assertEqual(tally, {'refunded':'10.00','unpaid':'6.00','no_refund':'7.00','final':'7.00'})
         _, discarded = self.rows("discarded")
-        self.assertEqual(discarded[0][:6], ["date", "order", "time", "drinks", "amount", "waited_min"])
-        self.assertEqual(len(discarded), 2)
+        wasted = detail_rows(discarded)
+        self.assertEqual(len(wasted), 1)
+        self.assertEqual(wasted[0]['discarded_by'], 'barista')
+        self.assertEqual(wasted[0]['included_line_sales'], '9.00')
+        self.assertNotIn('reason', wasted[0])
+        self.assertIn('ready_to_discarded_min', wasted[0])
         response, every = self.rows("all", scope="all")
-        self.assertEqual(every[0][:4], ["date", "order", "time", "status"])
-        self.assertEqual(len(every), 1 + 5)  # one row per drink
+        self.assertEqual(len(detail_rows(every)), 5)
         self.assertIn("beansbeats_all_orders_all-days.csv", response.headers["content-disposition"])
+        complete, complete_rows = self.rows('complete')
+        self.assertIn('COMPLETE', complete.text.upper())
+        self.assertIn(['ALL ORDERS'], complete_rows)
+        self.assertIn(['CANCELLED'], complete_rows)
+        self.assertIn(['DISCARDED'], complete_rows)
+        discard_section = complete_rows.index(['DISCARDED'])
+        self.assertNotIn('reason', complete_rows[discard_section + 1])
+        self.assertIn('reason', complete_rows[complete_rows.index(['CANCELLED']) + 1])
         _, all_sales = self.rows("sales", scope="all")
         self.assertEqual(all_sales[-1], ["ALL EVENT DAYS", "GRAND TOTAL", "", "", "3", "-", "24.00"])
         for kind in ("sales", "cancelled", "discarded", "all"):
@@ -104,6 +121,43 @@ class TestReportViews(Booth):
         details = [log["details"] for log in self.logs("CSV_EXPORT")]
         self.assertIn("Exported cancelled orders for " + day, details)
         self.assertIn("Exported all orders for all event days", details)
+
+    def test_cross_day_discard_and_multiline_master_reconcile_without_double_counting(self):
+        day = self.tablet['event_day']
+        old = self.client.post('/api/orders', headers=self.lead, json={
+            'idempotency_key': str(uuid.uuid4()), 'first_name': 'NeverExportName', 'event_day': '2026-10-01',
+            'items': [{'item_name':'Latte','unit_price_cents':1000,'quantity':2,'milk':'oat','temperature':'iced'},
+                      {'item_name':'Americano','unit_price_cents':600,'quantity':1,'temperature':'hot'}]}).json()
+        self.assertEqual(self.client.patch(f"/api/orders/{old['id']}/status", headers=self.lead, json={'status':'ready'}).status_code, 200)
+        self.assertEqual(self.action('order.status', {'id':old['id'],'status':'discarded'}).status_code, 200)
+        self.assertEqual(self.get(f'/api/reports/orders?kind=discarded&event_day={day}').json()['orders'], [])
+        [o] = self.get('/api/reports/orders?kind=discarded&scope=all').json()['orders']
+        self.assertEqual((o['order_id'],o['cups'],o['amount_cents'],o['counts_in_sales']), (old['id'],3,2600,True))
+        self.assertEqual(o['stages']['ready']['by'], 'booth_lead')
+        self.assertEqual(o['stages']['received']['by'], 'booth_lead')
+        self.assertEqual(o['stages']['discarded']['device_id'], self.device)
+        self.assertTrue(o['stages']['discarded']['synced_at'])
+        daily = self.get('/api/reports/daily?scope=all').json()
+        self.assertEqual(daily['summary']['discarded'], {'orders':1,'cups':3,'amount_cents':2600})
+        self.assertEqual(daily['total_revenue_cents'], 2600)
+        response = self.get('/api/reports/csv?kind=all&scope=all')
+        rows = list(csv.reader(io.StringIO(response.text)))
+        index = next(i for i,r in enumerate(rows) if r[:3]==['date','order','order_id'])
+        details = [dict(zip(rows[index],r)) for r in rows[index+1:]]
+        self.assertEqual(len(details), 2)
+        self.assertEqual(sum(float(r['included_line_sales']) for r in details),26)
+        self.assertTrue(all(r['order_total_repeated_do_not_sum']=='26.00' for r in details))
+        self.assertNotIn('NeverExportName',response.text)
+        self.assertTrue(all(r['discarded_at_sgt'].endswith('+08:00') for r in details))
+        self.assertTrue(all(r['collected_by']=='—' for r in details))
+        # The same number on another date must not inherit this order's actors.
+        with Session(test_engine) as session:
+            from app.models import OrderStage
+            for row in session.exec(select(OrderStage)).all(): session.delete(row)
+            session.commit()
+        # REST-only historical stage has no unambiguous receipt; show missing rather than guess.
+        [historical] = self.get('/api/reports/orders?kind=all&scope=all').json()['orders']
+        self.assertIsNone(historical['stages']['ready']['by'])
 
 
 if __name__ == "__main__":

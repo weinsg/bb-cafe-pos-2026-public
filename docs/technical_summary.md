@@ -76,7 +76,7 @@ Christmas Together 2026 · 26–29 Nov · Hall F, Marina Bay Sands · Live: http
 | 3 Guest status page | Scan QR → order number, drinks, progress steps, orders ahead, **wait estimate**; chime, flash and title change when Ready |
 | 4 Ready board | Second screen / TV: **12 Ready + 12 In progress** (Received orders when Making is skipped), number beside name, pages every 8 s; Ready on the left or right |
 | 5 Menu controls | Change items and prices, **sold out** for a drink or oat milk; every device updates live |
-| 6 Daily sales report | Cups and totals **per day or all event days**, by drink and option; views **Sold / Cancelled / Discarded / All orders**; refund tally and **final sales** to match the POS; **4 CSV files** |
+| 6 Report | Reconciliation summary and detailed **Sales / Cancelled / Discarded / All orders**, by original order date or all days; stage staff/timestamps, available sync metadata and **5 CSV exports**. Collapsible sections remember choices per login/device; compact totals stay visible. |
 
 ## How a drink flows
 
@@ -95,7 +95,7 @@ Christmas Together 2026 · 26–29 Nov · Hall F, Marina Bay Sands · Live: http
 | No app, no hardware | Any browser; the camera reads the QR; no printer or reader |
 | Wi-Fi drops? Keeps going | Saved on the device, synced once |
 | Luckin-style guest alert | Live status, real wait estimate, chime |
-| Total matches the POS | Refunds recorded; report counts only paid cups |
+| POS reconciliation | Recorded refunded/unpaid cancellations excluded; compare final recorded sales with the POS |
 | Handles the crowd | 300 phones, 10 min: 95% under 10 ms, 0 errors |
 | Any crew size | One device or many, in sync |
 | Safe by default | Server-checked roles, rate-limited logins, HTTPS, daily backups |
@@ -112,7 +112,7 @@ Christmas Together 2026 · 26–29 Nov · Hall F, Marina Bay Sands · Live: http
 
 ## Tested
 
-Latest backend checks: 99 tests passed on both SQLite and PostgreSQL (7 November).
+Baseline backend checks: 99 tests passed on both SQLite and PostgreSQL (7 November). See README release notes for the current code update.
 
 - All 25 browser tests passed (7 Nov), including Wi-Fi drop and recovery and phone screens
 - Load test: 300 guest phones for 10 minutes on a 1-CPU server, no errors
