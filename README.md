@@ -5,8 +5,9 @@
 | **Live app** | https://165-22-242-253.sslip.io |
 | **Ready board** | https://165-22-242-253.sslip.io/board |
 | **Test logins** | Given in the submission form (not published here) |
-| **Demo video (3 min)** | DEMO_VIDEO_LINK |
+| **Demo video (3 min)** | [Watch on YouTube](https://youtu.be/ASaa_BQ2MeY) |
 | **Technical summary** | [technical_summary.pdf](docs/technical_summary.pdf): features, architecture, offline sync, PDPA and known limitations |
+| Submission memo | [Read online](docs/submission_memo.md) · [Word document](docs/submission_memo.docx); includes video, PDF and GitHub README links |
 
 Order and pickup system for the Beans&Beats charity coffee booth at Christmas Together 2026 (26–29 November, Hall F, Marina Bay Sands). Baristas take orders on a tablet or laptop, work a live queue, and guests follow their drink on their own phone, with an alert when it is ready. Payment stays on the organiser's POS. All profits go to Singapore Red Cross Young Hearts.
 

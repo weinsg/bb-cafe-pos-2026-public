@@ -1,5 +1,13 @@
 # Beans&Beats Booth — Submission Memo
 
+## Submission links — updated 8 November 2026
+
+- **3-minute demo video:** [Watch on YouTube](https://youtu.be/ASaa_BQ2MeY).
+- **Technical summary (PDF):** [Open the PDF on GitHub](https://github.com/weinsg/bb-cafe-pos-2026-public/blob/main/docs/technical_summary.pdf).
+- **GitHub README:** [Latest setup, release details, test status and limitations](https://github.com/weinsg/bb-cafe-pos-2026-public#readme).
+
+**Please refer to the GitHub README for the latest information.** This memo and the technical-summary PDF are summaries; the README contains the current release details.
+
 ## What you built
 
 **Beans&Beats Booth: an order and pickup system for the charity coffee booth at Christmas Together 2026** (26–29 Nov, Hall F, Marina Bay Sands; all profits to Singapore Red Cross Young Hearts).
