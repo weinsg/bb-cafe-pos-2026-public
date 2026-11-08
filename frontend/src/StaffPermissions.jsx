@@ -91,7 +91,7 @@ export function StaffPermissionsScreen() {
                 </th>
                 <th>Staff login</th>
                 <th>Completed orders</th>
-                <th>Access</th>
+                <th>Completed-order access</th>
                 <th>Cancel orders</th>
               </tr>
             </thead>
