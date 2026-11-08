@@ -25,7 +25,7 @@ This README is the step-by-step guide to install, deploy and run the system. The
 
 ## Latest application update — 8 November 2026
 
-Synced from verified application release `d7e2213`, retaining this public repository's environment-only account setup, hidden demo credentials and separate Git history.
+Includes the verified Report/permissions release and the 8 November Queue estimate display update, retaining this public repository's environment-only account setup, hidden demo credentials and separate Git history.
 
 - **Report** replaces Daily sales. Sales reconciles recorded order value, refunded and unpaid cancellations, and final recorded sales. Paid discarded drinks and paid cancellations without refunds remain included; discarded orders/cups/value are shown separately.
 - **All orders** supplies the detailed master records: order IDs, captured prices, stage timestamps and staff logins, available device/sync metadata and durations. Cancelled and Discarded exports use the same definitions. Five export choices include the Complete sales report; guest names are excluded.
@@ -33,6 +33,7 @@ Synced from verified application release `d7e2213`, retaining this public reposi
 - Report sections collapse/expand, with useful figures in their headings. Compact totals stay visible. Sales summary/By drink start open; other sections start closed. Choices are remembered per login/browser/device across reload/navigation. Summary links open and scroll to relevant details; Expand all/Collapse all affects report sections, not individual orders. CSV content stays complete regardless of presentation.
 - Admin can manage Booth Leads' and Baristas' Completed-order and cancellation rights; Leads manage Baristas only. Admin retains full access.
 - Settings-change notices dismiss independently after **3 seconds**, preserving the Queue's Ready # input focus and digits.
+- Waiting-time estimates appear in **order QR popups**, **customer tracking** and the **ready board**. The staff Queue toolbar/sidebar has no estimate, for any role or screen width. Settings wording reflects this scope; the customer-display switches and formats remain available. Verified with a production frontend build, four focused browser regression checks, and all-role checks at phone/tablet/desktop widths.
 
 Payments/refunds are recorded on the organiser's POS and are not independently verified by this app. Partial refunds and refunds after discard remain unsupported. Physical Safari/Android acceptance and event network hardening remain separate work. The existing PDF/DOCX deliverables are earlier snapshots; these release notes describe the current code.
 

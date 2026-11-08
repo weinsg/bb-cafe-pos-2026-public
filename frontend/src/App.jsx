@@ -289,8 +289,6 @@ function StaffApp() {
                 <span className="nav-count">{active}</span>
               )}
             </a>
-            {/* The Queue screen puts its new-order estimate here on tablets. */}
-            {id === "queue" && <div id="side-slot" className="side-slot" />}
             </React.Fragment>
           ))}
         </nav>

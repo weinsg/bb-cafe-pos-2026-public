@@ -115,8 +115,8 @@ function Switch({ title, value, onChange, onText, offText }) {
   );
 }
 
-// The estimate on the ready board and on the guest's phone; staff screens always show it.
-// How the estimate reads on the guest's phone and the board (staff screens keep the range).
+// The estimate on the ready board and on the guest's phone; Queue has none; QR popups keep the range.
+// How the estimate reads on the guest's phone and the board (QR popups keep the range).
 const DISPLAYS = [
   ["range", "Range", "about 7–11 min"],
   ["upper", "Upper bound only", "up to 11 min"],
@@ -199,7 +199,7 @@ function EstimateSettingForm() {
           </div>
         </div>
         <p className="footnote">
-          On the guest's phone and the ready board. Staff screens (the Queue bar and the order popups) always show the range.
+          Applies to the guest's phone and the ready board. Order QR popups keep the range. No waiting-time estimate is shown on the staff Queue screen.
         </p>
         <button className="primary" disabled={!changed}>
           {saving ? "Saving…" : "Save waiting-time estimate"}

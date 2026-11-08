@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { changeStatus, db, eventDay, isActive, reopenCollected } from "./data";
 import { useResource } from "./useResource";
@@ -17,31 +16,6 @@ function timestamp(value) {
     minute: "2-digit",
     timeZone: "Asia/Singapore",
   });
-}
-
-// True while the media query matches (re-checked when the window is resized or rotated).
-function useMedia(query) {
-  const [match, setMatch] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const list = window.matchMedia(query);
-    const update = () => setMatch(list.matches);
-    update();
-    list.addEventListener("change", update);
-    return () => list.removeEventListener("change", update);
-  }, [query]);
-  return match;
-}
-
-// "New order: about X–Y min · Avg wait today: Z min": in the filter bar, or in the side bar on tablets.
-function QueueEstimate({ figures }) {
-  return (
-    <span className="queue-estimate" role="status">
-      <span>
-        New order: <b>about <span className="nowrap">{figures.new_order_low_min}–{figures.new_order_high_min} min</span></b>
-      </span>
-      {figures.average_wait_min != null && <span>Avg wait today: {figures.average_wait_min} min</span>}
-    </span>
-  );
 }
 
 export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
@@ -77,8 +51,6 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
   const places = cancelPlaces(config);
   const [discard, setDiscard] = useState(null);
   const [day, setDay] = useState(eventDay);
-  // Today's figures for "New order: about X–Y min" in the filter bar.
-  const { data: figures } = useResource("/orders/wait-estimate", "wait-estimate");
   const history = useResource(
     canViewCompleted ? `/orders/completed?event_day=${day}` : null,
   );
@@ -254,13 +226,6 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
       setBusy(new Set());
     }
   }
-  // From 1100 to 1599px the estimate sits in the side bar so the tabs, Ready # box
-  // and hint fit one row and the tickets do not move; wider, it stays in the bar; narrower, on the row under the tabs.
-  const estimateInSideBar = useMedia("(min-width: 1100px) and (max-width: 1599px)");
-  const [sideSlot, setSideSlot] = useState(null);
-  useEffect(() => setSideSlot(document.getElementById("side-slot")), []);
-  // Late (Ready 30+ min) tab; Cancelled after Completed; no To make tab. With the Making step
-  // Off, the Making tab hides unless orders are still in Making.
   const showMaking = useMaking || groups.making.length > 0;
   useEffect(() => {
     if (!showMaking && filter === "making") setFilter("all");
@@ -320,10 +285,8 @@ export function QueueScreen({ canViewCompleted, canReopen, canCancel }) {
               <span className="hint-short">① Tap ② 112 + Enter</span>
             </span>
           </form>
-          {figures && !(estimateInSideBar && sideSlot) && <QueueEstimate figures={figures} />}
         </div>
       </div>
-      {figures && estimateInSideBar && sideSlot && createPortal(<QueueEstimate figures={figures} />, sideSlot)}
       {choice && (
         <section className="ready-choice" role="group" aria-label="Which order is Ready?">
           <p>
